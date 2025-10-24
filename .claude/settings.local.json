@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(pnpm add:*)",
+      "Bash(test:*)",
+      "Bash(tree:*)",
+      "Bash(pnpm db:generate:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(npx shadcn@latest add switch)",
+      "Bash(npx tsc:*)",
+      "Bash(if exist nul del /f nul)",
+      "Bash(npm run build:*)",
+      "Bash(dir /s \"c:\\xampp\\htdocs\\Webstorm\\school-ult\\app\")",
+      "Bash(dir /s \"c:\\xampp\\htdocs\\Webstorm\\school-ult\\components\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

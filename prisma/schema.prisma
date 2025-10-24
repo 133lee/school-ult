@@ -1,0 +1,1175 @@
+// =============================================
+// PRODUCTION-READY ZAMBIAN SCHOOL MANAGEMENT SYSTEM
+// All Security Fixes + Simplified Student Model Applied
+// =============================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================
+// CORE USER & AUTHENTICATION MODELS
+// =============================================
+
+model User {
+  id           String @id @default(cuid())
+  email        String @unique
+  passwordHash String
+
+  // PERSONAL INFO
+  firstName  String
+  middleName String?
+  lastName   String
+
+  // CONTACT
+  phone            String?
+  alternativePhone String?
+  physicalAddress  String?
+
+  // USER MANAGEMENT
+  role       Role    @default(STUDENT)
+  isActive   Boolean @default(true)
+  isVerified Boolean @default(false)
+
+  // SECURITY (All tokens hashed before storage)
+  emailVerified          DateTime?
+  emailVerifyTokenHash   String?
+  passwordResetTokenHash String?
+  passwordResetExpires   DateTime?
+  lastLoginAt            DateTime?
+  loginAttempts          Int       @default(0)
+  lockedUntil            DateTime?
+  twoFactorSecret        String? // Encrypt at application level
+  twoFactorEnabled       Boolean   @default(false)
+
+  // AUDIT FIELDS
+  version   Int       @default(0) // Optimistic locking
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  deletedBy String?
+  createdBy String?
+  updatedBy String?
+
+  // TEACHER-SPECIFIC FIELDS
+  employeeNumber   String?   @unique
+  specialization   String[] // Array of specializations (kept for backward compatibility)
+  primarySubject   String? // Main subject the teacher specializes in
+  secondarySubject String? // Optional second subject (teachers can teach max 2 subjects)
+  qualifications   String?
+  dateOfJoining    DateTime?
+  department       String? // Sciences, Languages, Humanities, Technology, Arts, Physical Education
+  isDepartmentHead Boolean   @default(false) // Is this teacher a Head of Department (HOD)?
+  teachingLoad     Int?
+
+  // PARENT-SPECIFIC FIELDS
+  occupation  String?
+  workAddress String?
+  workPhone   String?
+
+  // RELATIONS
+  sessions                  UserSession[]
+  teacherClassAssignments   TeacherClassAssignment[]
+  teacherSubjectAssignments TeacherSubjectAssignment[]
+  gradesEntered             Grade[]                    @relation("GradeEnteredBy")
+  parentRelations           ParentStudentRelation[]
+  subjectsCreated           Subject[]                  @relation("SubjectCreator")
+  subjectsUpdated           Subject[]                  @relation("SubjectUpdater")
+  auditLogs                 AuditLog[]
+  notifications             Notification[]
+  attendanceMarked          Attendance[]
+  classRegistersMarked      ClassRegister[]            @relation("ClassRegisterTeacher")
+  subjectAttendanceMarked   SubjectAttendance[]        @relation("SubjectAttendanceTeacher")
+  disciplinaryReports       DisciplinaryRecord[]
+  fileUploads               FileUpload[]
+  timetableSlots            TimetableSlot[]
+  departmentHeadAssignments DepartmentHeadAssignment[]
+  departmentMeetingsCreated DepartmentMeeting[]
+
+  @@index([email])
+  @@index([role])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@index([employeeNumber])
+  @@index([firstName, middleName, lastName])
+  @@map("users")
+}
+
+model UserSession {
+  id               String    @id @default(cuid())
+  userId           String
+  token            String    @unique
+  refreshToken     String?   @unique
+  expiresAt        DateTime
+  refreshExpiresAt DateTime?
+  ipAddress        String?
+  userAgent        String?
+  deviceInfo       String?
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  lastUsedAt       DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([isActive])
+  @@map("user_sessions")
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+  PARENT
+  STAFF
+}
+
+// =============================================
+// ACADEMIC YEAR & TERM MANAGEMENT
+// =============================================
+
+model AcademicYear {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  startDate   DateTime
+  endDate     DateTime
+  isCurrent   Boolean   @default(false)
+  isActive    Boolean   @default(true)
+  description String?
+  version     Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  terms                     Term[]
+  enrollments               Enrollment[]
+  assessments               Assessment[]
+  reportCards               ReportCard[]
+  teacherClassAssignments   TeacherClassAssignment[]
+  teacherSubjectAssignments TeacherSubjectAssignment[]
+  timetableSlots            TimetableSlot[]
+  classes                   Class[]
+  departmentHeadAssignments DepartmentHeadAssignment[]
+
+  @@index([isCurrent])
+  @@index([isActive])
+  @@index([startDate])
+  @@index([deletedAt])
+  @@map("academic_years")
+}
+
+model Term {
+  id             String    @id @default(cuid())
+  academicYearId String
+  name           String
+  number         Int
+  startDate      DateTime
+  endDate        DateTime
+  isCurrent      Boolean   @default(false)
+  isActive       Boolean   @default(true)
+  version        Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  academicYear              AcademicYear               @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
+  enrollments               Enrollment[]
+  assessments               Assessment[]
+  attendance                Attendance[]
+  classRegisters            ClassRegister[]            @relation("ClassRegisterTerm")
+  subjectAttendance         SubjectAttendance[]        @relation("SubjectAttendanceTerm")
+  reportCards               ReportCard[]
+  teacherClassAssignments   TeacherClassAssignment[]
+  teacherSubjectAssignments TeacherSubjectAssignment[]
+  timetableSlots            TimetableSlot[]
+
+  @@unique([academicYearId, name])
+  @@unique([academicYearId, number])
+  @@index([isCurrent])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@map("terms")
+}
+
+// =============================================
+// GRADE LEVELS (NEW - Enforces referential integrity)
+// =============================================
+
+model GradeLevel {
+  id           String   @id @default(cuid())
+  name         String   @unique // "Grade 1", "Grade 7", "Form 5"
+  code         String   @unique // "G1", "G7", "F5"
+  numericLevel Int      @unique // 1-12
+  category     String // "PRIMARY", "JUNIOR", "SENIOR"
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  students       Student[]
+  subjects       Subject[]
+  classes        Class[]
+  assessments    Assessment[]
+  gradingConfigs GradingConfig[]
+  reportCards    ReportCard[]
+
+  @@index([isActive])
+  @@index([sortOrder])
+  @@map("grade_levels")
+}
+
+// =============================================
+// STUDENT MODEL - SIMPLIFIED & SECURE
+// =============================================
+
+model Student {
+  id            String @id @default(cuid())
+  studentNumber String @unique
+
+  // CORE PERSONAL INFO
+  firstName  String
+  middleName String?
+  lastName   String
+
+  // DEMOGRAPHICS
+  dateOfBirth DateTime?
+  gender      Gender?
+  nationality String?   @default("Zambian")
+
+  // CONTACT & LOCATION
+  physicalAddress String?
+  phone           String?
+  email           String?
+  province        String?
+  district        String?
+
+  // EMERGENCY CONTACT - PRIMARY
+  emergencyContactName     String?
+  emergencyContactPhone    String?
+  emergencyContactEmail    String?
+  emergencyContactRelation String?
+  emergencyContactAddress  String?
+
+  // EMERGENCY CONTACT - SECONDARY
+  emergency2ContactName     String?
+  emergency2ContactPhone    String?
+  emergency2ContactEmail    String?
+  emergency2ContactRelation String?
+
+  // MEDICAL INFORMATION (Encrypt at application level)
+  bloodType         BloodType?
+  allergies         String?
+  medicalConditions String?
+  medications       String?
+
+  // ACADEMIC TRACKING
+  gradeLevelId   String
+  previousSchool String?
+  admissionDate  DateTime @default(now())
+  admissionClass String?
+
+  // FINANCIAL
+  scholarshipStatus String?
+  feeStatus         FeeStatus @default(CURRENT)
+
+  // STATUS & AUDIT
+  isActive         Boolean   @default(true)
+  withdrawalDate   DateTime?
+  withdrawalReason String?
+  version          Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+  deletedBy        String?
+
+  // RELATIONS
+  gradeLevel          GradeLevel              @relation(fields: [gradeLevelId], references: [id], onDelete: Restrict)
+  enrollments         Enrollment[]
+  grades              Grade[]
+  reportCards         ReportCard[]
+  parentRelations     ParentStudentRelation[]
+  attendance          Attendance[]
+  classRegisters      ClassRegister[]         @relation("ClassRegisterStudent")
+  subjectAttendance   SubjectAttendance[]     @relation("SubjectAttendanceStudent")
+  disciplinaryRecords DisciplinaryRecord[]
+
+  @@index([studentNumber])
+  @@index([firstName, lastName])
+  @@index([gradeLevelId])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@index([admissionDate])
+  @@index([firstName, middleName, lastName])
+  @@map("students")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum BloodType {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+  UNKNOWN
+}
+
+enum FeeStatus {
+  CURRENT
+  OWING
+  OVERPAID
+  EXEMPT
+}
+
+// =============================================
+// PARENT-STUDENT RELATIONSHIPS
+// =============================================
+
+model ParentStudentRelation {
+  id                    String           @id @default(cuid())
+  parentId              String
+  studentId             String
+  relationship          RelationshipType
+  isPrimary             Boolean          @default(false)
+  isEmergencyContact    Boolean          @default(false)
+  canPickup             Boolean          @default(true)
+  canAuthorizeDecisions Boolean          @default(false)
+  version               Int              @default(0)
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  deletedAt             DateTime?
+
+  parent  User    @relation(fields: [parentId], references: [id], onDelete: Restrict)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@unique([parentId, studentId])
+  @@index([studentId])
+  @@index([isPrimary])
+  @@index([deletedAt])
+  @@map("parent_student_relations")
+}
+
+enum RelationshipType {
+  FATHER
+  MOTHER
+  GUARDIAN
+  STEPFATHER
+  STEPMOTHER
+  GRANDFATHER
+  GRANDMOTHER
+  UNCLE
+  AUNT
+  SIBLING
+  OTHER
+}
+
+// =============================================
+// SUBJECTS & CLASSES
+// =============================================
+
+model Subject {
+  id           String  @id @default(cuid())
+  name         String
+  code         String
+  gradeLevelId String
+  description  String?
+
+  // SUBJECT INFO
+  category       SubjectCategory @default(CORE)
+  prerequisites  String?
+  credits        Float?          @default(1.0)
+  department     String?
+  duration       Int?
+  practicalHours Int?
+
+  // CONFIGURATION
+  isMandatory  Boolean @default(false)
+  isActive     Boolean @default(true)
+  hasExam      Boolean @default(true)
+  hasPractical Boolean @default(false)
+
+  // AUDIT FIELDS
+  version   Int       @default(0)
+  createdBy String?
+  createdAt DateTime  @default(now())
+  updatedBy String?
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  deletedBy String?
+
+  // RELATIONS
+  gradeLevel         GradeLevel                 @relation(fields: [gradeLevelId], references: [id], onDelete: Restrict)
+  creator            User?                      @relation("SubjectCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater            User?                      @relation("SubjectUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
+  classes            Class[]
+  grades             Grade[]
+  teacherAssignments TeacherSubjectAssignment[]
+  assessments        Assessment[]
+  timetableSlots     TimetableSlot[]
+  enrollments        Enrollment[]
+  subjectAttendance  SubjectAttendance[]        @relation("SubjectAttendanceSubject")
+
+  @@unique([code, gradeLevelId, deletedAt])
+  @@unique([name, gradeLevelId, deletedAt])
+  @@index([gradeLevelId])
+  @@index([category])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@index([isMandatory])
+  @@map("subjects")
+}
+
+enum SubjectCategory {
+  CORE
+  ELECTIVE
+  SPECIALIZED
+  EXTRACURRICULAR
+  VOCATIONAL
+  LANGUAGE
+  SCIENCE
+  MATHEMATICS
+  HUMANITIES
+  ARTS
+}
+
+model Class {
+  id             String  @id @default(cuid())
+  name           String
+  gradeLevelId   String
+  section        String?
+  capacity       Int?    @default(40)
+  currentSize    Int?    @default(0)
+  academicYearId String
+  description    String?
+  subjectId      String?
+  roomNumber     String?
+
+  // CLASS MANAGEMENT
+  isActive Boolean @default(true)
+
+  // AUDIT
+  version   Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // RELATIONS
+  gradeLevel         GradeLevel               @relation(fields: [gradeLevelId], references: [id], onDelete: Restrict)
+  academicYear       AcademicYear             @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
+  subject            Subject?                 @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+  enrollments        Enrollment[]
+  teacherAssignments TeacherClassAssignment[]
+  assessments        Assessment[]
+  attendance         Attendance[]
+  classRegisters     ClassRegister[]          @relation("ClassRegisterClass")
+  subjectAttendance  SubjectAttendance[]      @relation("SubjectAttendanceClass")
+  timetableSlots     TimetableSlot[]
+
+  @@unique([name, gradeLevelId, section, academicYearId, deletedAt])
+  @@index([gradeLevelId])
+  @@index([academicYearId])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@map("classes")
+}
+
+// =============================================
+// ENROLLMENTS & ASSIGNMENTS
+// =============================================
+
+model Enrollment {
+  id               String    @id @default(cuid())
+  studentId        String
+  classId          String
+  academicYearId   String
+  termId           String
+  subjectId        String? // Prevent duplicate subject enrollments
+  isActive         Boolean   @default(true)
+  enrolledAt       DateTime  @default(now())
+  withdrawnAt      DateTime?
+  withdrawalReason String?
+  version          Int       @default(0)
+
+  student      Student      @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  class        Class        @relation(fields: [classId], references: [id], onDelete: Restrict)
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
+  term         Term         @relation(fields: [termId], references: [id], onDelete: Restrict)
+  subject      Subject?     @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+
+  @@unique([studentId, classId, academicYearId, termId])
+  @@unique([studentId, subjectId, academicYearId, termId])
+  @@index([studentId])
+  @@index([classId])
+  @@index([academicYearId])
+  @@index([termId])
+  @@index([isActive])
+  @@map("enrollments")
+}
+
+model TeacherClassAssignment {
+  id             String    @id @default(cuid())
+  teacherId      String
+  classId        String
+  academicYearId String
+  termId         String
+  isClassTeacher Boolean   @default(false)
+  isActive       Boolean   @default(true)
+  assignedAt     DateTime  @default(now())
+  unassignedAt   DateTime?
+  version        Int       @default(0)
+
+  teacher      User         @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  class        Class        @relation(fields: [classId], references: [id], onDelete: Restrict)
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
+  term         Term         @relation(fields: [termId], references: [id], onDelete: Restrict)
+
+  @@unique([teacherId, classId, academicYearId, termId])
+  // IMPORTANT: A teacher can only be a class teacher for ONE class per academic year/term
+  // This is enforced by creating a unique partial index where isClassTeacher=true
+  // Note: Prisma doesn't support conditional unique constraints directly in schema
+  // This must be enforced at the application level with a check before creating/updating
+  @@index([teacherId])
+  @@index([classId])
+  @@index([academicYearId])
+  @@index([termId])
+  @@index([isClassTeacher])
+  @@index([teacherId, academicYearId, termId, isClassTeacher])
+  @@map("teacher_class_assignments")
+}
+
+model TeacherSubjectAssignment {
+  id             String    @id @default(cuid())
+  teacherId      String
+  subjectId      String
+  academicYearId String
+  termId         String
+  gradeLevels    String[]
+  isActive       Boolean   @default(true)
+  assignedAt     DateTime  @default(now())
+  unassignedAt   DateTime?
+  version        Int       @default(0)
+
+  teacher      User         @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  subject      Subject      @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
+  term         Term         @relation(fields: [termId], references: [id], onDelete: Restrict)
+
+  @@unique([teacherId, subjectId, academicYearId, termId])
+  @@index([teacherId])
+  @@index([subjectId])
+  @@index([academicYearId])
+  @@index([termId])
+  @@map("teacher_subject_assignments")
+}
+
+// =============================================
+// ASSESSMENTS & GRADING
+// =============================================
+
+model AssessmentType {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  code        String  @unique
+  description String?
+  weight      Float   @default(1.0)
+  sortOrder   Int     @default(0)
+  isActive    Boolean @default(true)
+
+  minScore     Int @default(0)
+  maxScore     Int @default(100)
+  passingScore Int @default(50)
+
+  // Additional fields expected by seed script
+  showOnReportCard Boolean @default(true)
+  isMandatory      Boolean @default(false)
+
+  version   Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  assessments Assessment[]
+
+  @@index([isActive])
+  @@index([sortOrder])
+  @@index([deletedAt])
+  @@index([isMandatory])
+  @@map("assessment_types")
+}
+
+model Assessment {
+  id               String  @id @default(cuid())
+  title            String
+  description      String?
+  maxScore         Int     @default(100)
+  passingScore     Int     @default(50)
+  academicYearId   String
+  termId           String
+  gradeLevelId     String
+  assessmentTypeId String
+  subjectId        String
+  classId          String
+
+  scheduledDate DateTime?
+  dueDate       DateTime?
+  isPublished   Boolean   @default(false)
+  publishedAt   DateTime?
+
+  version   Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  academicYear   AcademicYear   @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
+  term           Term           @relation(fields: [termId], references: [id], onDelete: Restrict)
+  gradeLevel     GradeLevel     @relation(fields: [gradeLevelId], references: [id], onDelete: Restrict)
+  assessmentType AssessmentType @relation(fields: [assessmentTypeId], references: [id], onDelete: Restrict)
+  subject        Subject        @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+  class          Class          @relation(fields: [classId], references: [id], onDelete: Restrict)
+  grades         Grade[]
+
+  @@index([academicYearId])
+  @@index([termId])
+  @@index([gradeLevelId])
+  @@index([subjectId])
+  @@index([classId])
+  @@index([isPublished])
+  @@index([deletedAt])
+  @@map("assessments")
+}
+
+model Grade {
+  id           String @id @default(cuid())
+  studentId    String
+  assessmentId String
+  subjectId    String
+
+  score       Int?
+  maxScore    Int     @default(100)
+  percentage  Float?
+  letterGrade String?
+  points      Float?
+
+  isAbsent    Boolean @default(false)
+  isExcused   Boolean @default(false)
+  isPublished Boolean @default(false)
+
+  remarks     String?
+  enteredById String
+  publishedAt DateTime?
+
+  version   Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  student    Student    @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Restrict)
+  subject    Subject    @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+  enteredBy  User       @relation("GradeEnteredBy", fields: [enteredById], references: [id], onDelete: Restrict)
+
+  @@unique([studentId, assessmentId])
+  @@index([studentId])
+  @@index([assessmentId])
+  @@index([subjectId])
+  @@index([isPublished])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@map("grades")
+}
+
+// =============================================
+// ATTENDANCE TRACKING - DUAL SYSTEM
+// =============================================
+
+// CLASS REGISTER - Taken once daily by class teacher (morning)
+// This is the official attendance for the day
+model ClassRegister {
+  id               String           @id @default(cuid())
+  studentId        String
+  classId          String
+  termId           String
+  date             DateTime         @db.Date
+  status           AttendanceStatus
+  arrivalTime      DateTime?        // Time student arrived (for LATE status)
+  reason           String?
+  remarks          String?
+  classTeacherId   String           // Class teacher who marked
+
+  version    Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  student      Student @relation("ClassRegisterStudent", fields: [studentId], references: [id], onDelete: Restrict)
+  class        Class   @relation("ClassRegisterClass", fields: [classId], references: [id], onDelete: Restrict)
+  term         Term    @relation("ClassRegisterTerm", fields: [termId], references: [id], onDelete: Restrict)
+  classTeacher User    @relation("ClassRegisterTeacher", fields: [classTeacherId], references: [id], onDelete: Restrict)
+
+  @@unique([studentId, classId, date])
+  @@index([studentId])
+  @@index([classId])
+  @@index([classTeacherId])
+  @@index([date])
+  @@index([status])
+  @@index([termId])
+  @@index([deletedAt])
+  @@map("class_registers")
+}
+
+// SUBJECT/PERIOD REGISTER - Taken each period by subject teacher
+// Used for calculating attendance percentage (students can dodge after morning)
+model SubjectAttendance {
+  id         String           @id @default(cuid())
+  studentId  String
+  classId    String
+  subjectId  String
+  termId     String
+  date       DateTime         @db.Date
+  period     Int              // 1-6 (Period number)
+  status     AttendanceStatus
+  reason     String?
+  remarks    String?
+  teacherId  String           // Subject teacher who marked
+
+  version    Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  student  Student @relation("SubjectAttendanceStudent", fields: [studentId], references: [id], onDelete: Restrict)
+  class    Class   @relation("SubjectAttendanceClass", fields: [classId], references: [id], onDelete: Restrict)
+  subject  Subject @relation("SubjectAttendanceSubject", fields: [subjectId], references: [id], onDelete: Restrict)
+  term     Term    @relation("SubjectAttendanceTerm", fields: [termId], references: [id], onDelete: Restrict)
+  teacher  User    @relation("SubjectAttendanceTeacher", fields: [teacherId], references: [id], onDelete: Restrict)
+
+  @@unique([studentId, classId, subjectId, date, period])
+  @@index([studentId])
+  @@index([classId])
+  @@index([subjectId])
+  @@index([teacherId])
+  @@index([date])
+  @@index([period])
+  @@index([status])
+  @@index([termId])
+  @@index([deletedAt])
+  @@map("subject_attendance")
+}
+
+// LEGACY - Keep for backward compatibility, will be migrated
+model Attendance {
+  id        String           @id @default(cuid())
+  studentId String
+  classId   String
+  termId    String
+  date      DateTime
+  status    AttendanceStatus
+  reason    String?
+  remarks   String?
+
+  markedById String?
+  version    Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  student  Student @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  class    Class   @relation(fields: [classId], references: [id], onDelete: Restrict)
+  term     Term    @relation(fields: [termId], references: [id], onDelete: Restrict)
+  markedBy User?   @relation(fields: [markedById], references: [id], onDelete: SetNull)
+
+  @@unique([studentId, classId, date])
+  @@index([studentId])
+  @@index([classId])
+  @@index([date])
+  @@index([status])
+  @@index([termId])
+  @@index([deletedAt])
+  @@map("attendance")
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+  SICK
+  AUTHORIZED_ABSENCE
+}
+
+// =============================================
+// TIMETABLE MANAGEMENT
+// =============================================
+
+model TimetableSlot {
+  id             String    @id @default(cuid())
+  classId        String
+  subjectId      String?
+  teacherId      String?
+  dayOfWeek      Int
+  startTime      String
+  endTime        String
+  roomNumber     String?
+  academicYearId String
+  termId         String
+  isActive       Boolean   @default(true)
+  version        Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  class        Class        @relation(fields: [classId], references: [id], onDelete: Restrict)
+  subject      Subject?     @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+  teacher      User?        @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
+  term         Term         @relation(fields: [termId], references: [id], onDelete: Restrict)
+
+  @@unique([classId, dayOfWeek, startTime, academicYearId, termId])
+  @@index([classId])
+  @@index([teacherId])
+  @@index([dayOfWeek])
+  @@index([deletedAt])
+  @@map("timetable_slots")
+}
+
+// =============================================
+// DISCIPLINARY RECORDS
+// =============================================
+
+model DisciplinaryRecord {
+  id           String               @id @default(cuid())
+  studentId    String
+  incident     String
+  description  String?
+  severity     DisciplinarySeverity
+  actionTaken  String?
+  reportedById String
+  dateOccurred DateTime
+  dateReported DateTime             @default(now())
+  status       String               @default("OPEN")
+  version      Int                  @default(0)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  deletedAt    DateTime?
+
+  student    Student @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  reportedBy User    @relation(fields: [reportedById], references: [id], onDelete: Restrict)
+
+  @@index([studentId])
+  @@index([dateOccurred])
+  @@index([severity])
+  @@index([status])
+  @@index([deletedAt])
+  @@map("disciplinary_records")
+}
+
+enum DisciplinarySeverity {
+  MINOR
+  MODERATE
+  MAJOR
+  SEVERE
+}
+
+// =============================================
+// SYSTEM CONFIGURATION & SETTINGS
+// =============================================
+
+model GradingConfig {
+  id                  String      @id @default(cuid())
+  gradeLevelId        String      @unique
+  configType          GradingType
+  config              Json
+  bestOfCount         Int?
+  mandatorySubjectIds String[]
+  passingGrade        Float       @default(50.0)
+  isActive            Boolean     @default(true)
+  version             Int         @default(0)
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  deletedAt           DateTime?
+
+  gradeLevel GradeLevel @relation(fields: [gradeLevelId], references: [id], onDelete: Restrict)
+
+  @@index([gradeLevelId])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@map("grading_configs")
+}
+
+enum GradingType {
+  SIMPLE_AVERAGE
+  COMPOSITE_SYSTEM
+  BEST_OF_X
+  POINTS_SYSTEM
+}
+
+model SchoolSettings {
+  id         String  @id @default(cuid())
+  schoolName String
+  schoolCode String? @unique
+  address    String?
+  phone      String?
+  email      String?
+  website    String?
+  logo       String?
+
+  // Additional fields expected by seed script
+  logoUrl         String?
+  motto           String?
+  establishedYear Int?
+
+  useFormsSystem        Boolean @default(false)
+  currentAcademicYearId String?
+  currentTermId         String?
+  timezone              String  @default("Africa/Lusaka")
+  currency              String  @default("ZMW")
+
+  enableNotifications Boolean @default(true)
+  enableSMS           Boolean @default(false)
+  enableEmail         Boolean @default(true)
+
+  version   Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("school_settings")
+}
+
+// =============================================
+// REPORTING & COMMUNICATIONS
+// =============================================
+
+model ReportCard {
+  id             String    @id @default(cuid())
+  studentId      String
+  academicYearId String
+  termId         String
+  gradeLevelId   String
+  reportData     Json
+  summary        Json?
+  generated      Boolean   @default(false)
+  generatedAt    DateTime?
+  publishedAt    DateTime?
+  isPublished    Boolean   @default(false)
+  version        Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  student      Student      @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
+  term         Term         @relation(fields: [termId], references: [id], onDelete: Restrict)
+  gradeLevel   GradeLevel   @relation(fields: [gradeLevelId], references: [id], onDelete: Restrict)
+
+  @@unique([studentId, academicYearId, termId])
+  @@index([studentId])
+  @@index([academicYearId])
+  @@index([termId])
+  @@index([isPublished])
+  @@index([deletedAt])
+  @@map("report_cards")
+}
+
+// =============================================
+// DEPARTMENT MANAGEMENT
+// =============================================
+
+model DepartmentHeadAssignment {
+  id             String   @id @default(cuid())
+  userId         String
+  department     String // Sciences, Languages, Humanities, Technology, Arts, Physical Education
+  academicYearId String
+  assignedAt     DateTime @default(now())
+  assignedBy     String?
+  isActive       Boolean  @default(true)
+  endedAt        DateTime?
+  version        Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
+
+  @@unique([department, academicYearId, isActive])
+  @@index([userId])
+  @@index([department])
+  @@index([academicYearId])
+  @@index([isActive])
+  @@map("department_head_assignments")
+}
+
+model DepartmentMeeting {
+  id         String   @id @default(cuid())
+  department String
+  title      String
+  date       DateTime
+  location   String?
+  agenda     Json // Array of agenda items
+  minutes    String?
+  attendees  String[] // Array of teacher IDs
+  isActive   Boolean  @default(true)
+  createdBy  String
+  version    Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  creator User @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+
+  @@index([department])
+  @@index([date])
+  @@index([createdBy])
+  @@map("department_meetings")
+}
+
+model Notification {
+  id       String               @id @default(cuid())
+  userId   String
+  title    String
+  message  String
+  type     NotificationType
+  data     Json?
+  priority NotificationPriority @default(NORMAL)
+
+  isRead Boolean   @default(false)
+  readAt DateTime?
+
+  deliveryMethod String[]  @default(["IN_APP"])
+  sentAt         DateTime?
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([type])
+  @@index([priority])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  GRADE_POSTED
+  REPORT_READY
+  ATTENDANCE_ALERT
+  ANNOUNCEMENT
+  SYSTEM_UPDATE
+  ASSIGNMENT_DUE
+  PARENT_MEETING
+  FEE_REMINDER
+  DISCIPLINARY_ACTION
+  ASSESSMENT_CREATED
+  ASSESSMENT_APPROVED
+  ASSESSMENT_REJECTED
+  DEPARTMENT_MEETING
+  REGISTER_AMENDMENT
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+// =============================================
+// AUDIT & SECURITY
+// =============================================
+
+model AuditLog {
+  id        String  @id @default(cuid())
+  userId    String?
+  sessionId String?
+  action    String
+  entity    String
+  entityId  String?
+  oldData   Json?
+  newData   Json?
+
+  ipAddress String?
+  userAgent String?
+  requestId String?
+  endpoint  String?
+  method    String?
+
+  success      Boolean @default(true)
+  errorMessage String?
+  duration     Int?
+
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([entity])
+  @@index([entityId])
+  @@index([createdAt])
+  @@index([ipAddress])
+  @@map("audit_logs")
+}
+
+// =============================================
+// ADDITIONAL UTILITY MODELS
+// =============================================
+
+model SystemLog {
+  id        String   @id @default(cuid())
+  level     LogLevel
+  message   String
+  context   Json?
+  timestamp DateTime @default(now())
+  source    String?
+
+  @@index([level])
+  @@index([timestamp])
+  @@index([source])
+  @@map("system_logs")
+}
+
+enum LogLevel {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+  FATAL
+}
+
+model FileUpload {
+  id           String    @id @default(cuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  path         String
+  url          String?
+  entityType   String?
+  entityId     String?
+  uploadedBy   String
+  isActive     Boolean   @default(true)
+  version      Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  uploader User @relation(fields: [uploadedBy], references: [id], onDelete: Restrict)
+
+  @@index([entityType, entityId])
+  @@index([uploadedBy])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@map("file_uploads")
+}
