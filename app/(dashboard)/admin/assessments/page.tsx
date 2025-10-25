@@ -23,6 +23,12 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Calendar as CalendarIcon,
   Search,
@@ -36,8 +42,11 @@ import {
   Edit,
   Save,
   X as XIcon,
+  Plus,
+  Bell,
 } from "lucide-react";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface Assessment {
   id: string;
@@ -136,6 +145,18 @@ export default function AdminAssessmentsPage() {
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [selectedAssessment, setSelectedAssessment] = useState<Assessment | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
+  // New assessment form state
+  const [newAssessment, setNewAssessment] = useState({
+    title: "",
+    type: "",
+    class: "",
+    subject: "",
+    teacher: "",
+    maxScore: 100,
+    scheduledDate: new Date(),
+  });
 
   // Grading configuration state
   const [editingConfig, setEditingConfig] = useState<string | null>(null);
@@ -220,6 +241,31 @@ export default function AdminAssessmentsPage() {
     alert("Assessment rejected. Teacher has been notified.");
     setRejectDialogOpen(false);
     setSelectedAssessment(null);
+  };
+
+  const handleCreateAssessment = () => {
+    // In a real application, this would:
+    // 1. Create the assessment in the database
+    // 2. Assign it to the specified teacher
+    // 3. Send a notification to the teacher
+    console.log("Creating assessment:", newAssessment);
+
+    // Simulate notification to teacher
+    const notificationMessage = `New assessment "${newAssessment.title}" has been created for ${newAssessment.class} - ${newAssessment.subject}. Please enter grades by ${format(newAssessment.scheduledDate, "MMM d, yyyy")}.`;
+
+    alert(`Assessment created successfully!\n\nNotification sent to ${newAssessment.teacher}:\n"${notificationMessage}"`);
+
+    // Reset form and close dialog
+    setNewAssessment({
+      title: "",
+      type: "",
+      class: "",
+      subject: "",
+      teacher: "",
+      maxScore: 100,
+      scheduledDate: new Date(),
+    });
+    setCreateDialogOpen(false);
   };
 
   const updateGradeScale = (
@@ -454,9 +500,13 @@ export default function AdminAssessmentsPage() {
         <div>
           <h1 className="text-2xl font-bold">Assessment Management</h1>
           <p className="text-muted-foreground text-sm">
-            Review and approve assessments across all classes
+            Create and manage assessments across all classes
           </p>
         </div>
+        <Button onClick={() => setCreateDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Create Assessment
+        </Button>
       </div>
 
       <Tabs defaultValue="overview">
@@ -481,90 +531,95 @@ export default function AdminAssessmentsPage() {
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          {/* Stats Cards */}
-          <div className="grid gap-4 md:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Assessments</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.total}</div>
-                <p className="text-xs text-muted-foreground">This term</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-yellow-600">
-                  Pending Review
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">
-                  {stats.pending}
-                </div>
-                <p className="text-xs text-muted-foreground">Awaiting approval</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-green-600">
-                  Approved
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">
-                  {stats.approved}
-                </div>
-                <p className="text-xs text-muted-foreground">Published</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-red-600">
-                  Rejected
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-red-600">
-                  {stats.rejected}
-                </div>
-                <p className="text-xs text-muted-foreground">Returned</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Recent Activity */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Assessment Activity</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {assessmentsData.slice(0, 5).map((assessment) => (
-                  <div key={assessment.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <div className={`p-2 rounded-lg ${
-                        assessment.subject === "Mathematics" ? "bg-blue-100" :
-                        assessment.subject === "Physics" ? "bg-green-100" :
-                        "bg-purple-100"
-                      }`}>
-                        <GraduationCap className="h-4 w-4" />
+          {/* Recent Activity and Stats Cards Side by Side */}
+          <div className="grid gap-4 md:grid-cols-3">
+            {/* Recent Activity - Takes 2 columns */}
+            <div className="md:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Assessment Activity</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {assessmentsData.slice(0, 5).map((assessment) => (
+                      <div key={assessment.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-4">
+                          <div className={`p-2 rounded-lg ${
+                            assessment.subject === "Mathematics" ? "bg-blue-100" :
+                            assessment.subject === "Physics" ? "bg-green-100" :
+                            "bg-purple-100"
+                          }`}>
+                            <GraduationCap className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-sm">{assessment.title}</h4>
+                            <p className="text-xs text-muted-foreground">
+                              {assessment.teacher} • {assessment.class} • {format(assessment.scheduledDate, "MMM d")}
+                            </p>
+                          </div>
+                        </div>
+                        <Badge className={getStatusConfig(assessment.status).color}>
+                          {getStatusConfig(assessment.status).label}
+                        </Badge>
                       </div>
-                      <div>
-                        <h4 className="font-semibold text-sm">{assessment.title}</h4>
-                        <p className="text-xs text-muted-foreground">
-                          {assessment.teacher} • {assessment.class} • {format(assessment.scheduledDate, "MMM d")}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge className={getStatusConfig(assessment.status).color}>
-                      {getStatusConfig(assessment.status).label}
-                    </Badge>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Stats Cards - 2x2 Grid in 1 column */}
+            <div className="grid gap-4 grid-cols-2 md:col-span-1">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.total}</div>
+                  <p className="text-xs text-muted-foreground">This term</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-yellow-600">
+                    Pending
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-yellow-600">
+                    {stats.pending}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Review</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-green-600">
+                    Approved
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">
+                    {stats.approved}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Published</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-red-600">
+                    Rejected
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-red-600">
+                    {stats.rejected}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Returned</p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
 
         {/* Review Queue Tab */}
@@ -819,6 +874,196 @@ export default function AdminAssessmentsPage() {
             <Button variant="destructive" onClick={handleReject}>
               <XCircle className="h-4 w-4 mr-2" />
               Reject
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Assessment Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create New Assessment</DialogTitle>
+            <DialogDescription>
+              Create a new assessment and notify the assigned teacher
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Assessment Title</Label>
+                <Input
+                  id="title"
+                  placeholder="e.g., CAT 1 - Mathematics"
+                  value={newAssessment.title}
+                  onChange={(e) =>
+                    setNewAssessment({ ...newAssessment, title: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="type">Assessment Type</Label>
+                <Select
+                  value={newAssessment.type}
+                  onValueChange={(value) =>
+                    setNewAssessment({ ...newAssessment, type: value })
+                  }>
+                  <SelectTrigger id="type">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CAT">CAT (Continuous Assessment Test)</SelectItem>
+                    <SelectItem value="MID">Mid-Term Exam</SelectItem>
+                    <SelectItem value="FINAL">End of Term Exam</SelectItem>
+                    <SelectItem value="QUIZ">Quiz</SelectItem>
+                    <SelectItem value="ASSIGNMENT">Assignment</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="class">Class</Label>
+                <Select
+                  value={newAssessment.class}
+                  onValueChange={(value) =>
+                    setNewAssessment({ ...newAssessment, class: value })
+                  }>
+                  <SelectTrigger id="class">
+                    <SelectValue placeholder="Select class" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="9A">Grade 9A</SelectItem>
+                    <SelectItem value="9B">Grade 9B</SelectItem>
+                    <SelectItem value="10A">Grade 10A</SelectItem>
+                    <SelectItem value="10B">Grade 10B</SelectItem>
+                    <SelectItem value="11A">Grade 11A</SelectItem>
+                    <SelectItem value="11B">Grade 11B</SelectItem>
+                    <SelectItem value="12A">Grade 12A</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subject">Subject</Label>
+                <Select
+                  value={newAssessment.subject}
+                  onValueChange={(value) =>
+                    setNewAssessment({ ...newAssessment, subject: value })
+                  }>
+                  <SelectTrigger id="subject">
+                    <SelectValue placeholder="Select subject" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Mathematics">Mathematics</SelectItem>
+                    <SelectItem value="Physics">Physics</SelectItem>
+                    <SelectItem value="Chemistry">Chemistry</SelectItem>
+                    <SelectItem value="Biology">Biology</SelectItem>
+                    <SelectItem value="English">English</SelectItem>
+                    <SelectItem value="History">History</SelectItem>
+                    <SelectItem value="Geography">Geography</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="teacher">Assign to Teacher</Label>
+                <Select
+                  value={newAssessment.teacher}
+                  onValueChange={(value) =>
+                    setNewAssessment({ ...newAssessment, teacher: value })
+                  }>
+                  <SelectTrigger id="teacher">
+                    <SelectValue placeholder="Select teacher" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Mr. Smith">Mr. Smith (Mathematics)</SelectItem>
+                    <SelectItem value="Dr. Williams">Dr. Williams (Physics)</SelectItem>
+                    <SelectItem value="Mrs. Johnson">Mrs. Johnson (English)</SelectItem>
+                    <SelectItem value="Mr. Brown">Mr. Brown (Chemistry)</SelectItem>
+                    <SelectItem value="Ms. Davis">Ms. Davis (Biology)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="maxScore">Maximum Score</Label>
+                <Input
+                  id="maxScore"
+                  type="number"
+                  value={newAssessment.maxScore}
+                  onChange={(e) =>
+                    setNewAssessment({
+                      ...newAssessment,
+                      maxScore: parseInt(e.target.value) || 100,
+                    })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Scheduled Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !newAssessment.scheduledDate && "text-muted-foreground"
+                    )}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {newAssessment.scheduledDate ? (
+                      format(newAssessment.scheduledDate, "PPP")
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={newAssessment.scheduledDate}
+                    onSelect={(date) =>
+                      date &&
+                      setNewAssessment({ ...newAssessment, scheduledDate: date })
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex gap-3">
+              <Bell className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+              <div className="space-y-1">
+                <h4 className="font-semibold text-sm text-blue-900 dark:text-blue-100">
+                  Teacher Notification
+                </h4>
+                <p className="text-xs text-blue-800 dark:text-blue-200">
+                  The assigned teacher will receive a notification about this assessment and will be able to enter grades for their students.
+                </p>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setCreateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateAssessment}
+              disabled={
+                !newAssessment.title ||
+                !newAssessment.type ||
+                !newAssessment.class ||
+                !newAssessment.subject ||
+                !newAssessment.teacher
+              }>
+              <Plus className="h-4 w-4 mr-2" />
+              Create & Notify
             </Button>
           </DialogFooter>
         </DialogContent>

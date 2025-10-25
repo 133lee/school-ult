@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 
 const TimetableGeneratorUI = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -14,9 +15,10 @@ const TimetableGeneratorUI = () => {
     { id: 1, name: 'Grade 8', classes: ['8A', '8B', '8C'] }
   ]);
   const [teachers, setTeachers] = useState([
-    { id: 1, name: 'Mr. Mwanza', subjects: ['Mathematics'] },
+    { id: 1, name: 'Mr. Mwanza', subjects: ['Mathematics', 'Physics'] },
     { id: 2, name: 'Mrs. Phiri', subjects: ['English', 'Literature'] },
-    { id: 3, name: 'Mr. Banda', subjects: ['Science', 'Biology'] }
+    { id: 3, name: 'Mr. Banda', subjects: ['Science', 'Biology'] },
+    { id: 4, name: 'Ms. Chirwa', subjects: ['Chemistry', 'Mathematics'] }
   ]);
   const [subjects, setSubjects] = useState([
     { id: 1, name: 'Mathematics', periods: 5 },
@@ -24,31 +26,36 @@ const TimetableGeneratorUI = () => {
     { id: 3, name: 'Science', periods: 4 }
   ]);
   const [timeSlots, setTimeSlots] = useState([
-    '08:00 - 08:40',
-    '08:40 - 09:20',
-    '09:20 - 10:00',
-    '10:00 - 10:20', // Break
-    '10:20 - 11:00',
-    '11:00 - 11:40',
-    '11:40 - 12:20',
-    '12:20 - 13:00', // Lunch
-    '13:00 - 13:40',
-    '13:40 - 14:20',
-    '14:20 - 15:00'
+    { time: '7:00 AM – 7:40 AM', short: '7:00-7:40', period: 'Period 1', isBreak: false },
+    { time: '7:40 AM – 8:20 AM', short: '7:40-8:20', period: 'Period 2', isBreak: false },
+    { time: '8:20 AM – 9:00 AM', short: '8:20-9:00', period: 'Period 3', isBreak: false },
+    { time: '9:00 AM – 9:40 AM', short: '9:00-9:40', period: 'Period 4', isBreak: false },
+    { time: '9:40 AM – 10:00 AM', short: '9:40-10:00', period: 'Break', isBreak: true },
+    { time: '10:00 AM – 10:40 AM', short: '10:00-10:40', period: 'Period 5', isBreak: false },
+    { time: '10:40 AM – 11:20 AM', short: '10:40-11:20', period: 'Period 6', isBreak: false },
+    { time: '11:20 AM – 12:00 PM', short: '11:20-12:00', period: 'Period 7', isBreak: false },
+    { time: '12:00 PM – 12:40 PM', short: '12:00-12:40', period: 'Period 8', isBreak: false },
+    { time: '12:40 PM – 1:00 PM', short: '12:40-1:00', period: 'Lunch', isBreak: true },
+    { time: '1:00 PM – 1:40 PM', short: '1:00-1:40', period: 'Period 9', isBreak: false },
+    { time: '1:40 PM – 2:20 PM', short: '1:40-2:20', period: 'Period 10', isBreak: false }
   ]);
 
-  const [newTeacher, setNewTeacher] = useState({ name: '', subject: '' });
+  const [newTeacher, setNewTeacher] = useState({ name: '', primarySubject: '', secondarySubject: '' });
   const [newSubject, setNewSubject] = useState({ name: '', periods: 5 });
   const [newGrade, setNewGrade] = useState({ name: '', classCount: 3 });
+  const [newTimeSlot, setNewTimeSlot] = useState({ time: '', period: '', isBreak: false });
   const [showSchedule, setShowSchedule] = useState(false);
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('all');
   const [schedule, setSchedule] = useState({});
 
   const addTeacher = () => {
-    if (newTeacher.name && newTeacher.subject) {
-      setTeachers([...teachers, { id: Date.now(), name: newTeacher.name, subjects: [newTeacher.subject] }]);
-      setNewTeacher({ name: '', subject: '' });
+    if (newTeacher.name && newTeacher.primarySubject) {
+      const subjects = newTeacher.secondarySubject
+        ? [newTeacher.primarySubject, newTeacher.secondarySubject]
+        : [newTeacher.primarySubject];
+      setTeachers([...teachers, { id: Date.now(), name: newTeacher.name, subjects }]);
+      setNewTeacher({ name: '', primarySubject: '', secondarySubject: '' });
     }
   };
 
@@ -81,16 +88,36 @@ const TimetableGeneratorUI = () => {
     setGrades(grades.filter(g => g.id !== id));
   };
 
+  const addTimeSlot = () => {
+    if (newTimeSlot.time && newTimeSlot.period) {
+      // Generate short version from time (e.g., "7:00 AM – 7:40 AM" -> "7:00-7:40")
+      const short = newTimeSlot.time
+        .replace(/\s+/g, '')
+        .split('–')
+        .map(t => t.replace(/AM|PM/g, '').trim())
+        .join('-');
+
+      setTimeSlots([...timeSlots, {
+        time: newTimeSlot.time,
+        short,
+        period: newTimeSlot.period,
+        isBreak: newTimeSlot.isBreak
+      }]);
+      setNewTimeSlot({ time: '', period: '', isBreak: false });
+    }
+  };
+
+  const removeTimeSlot = (index: number) => {
+    setTimeSlots(timeSlots.filter((_, i) => i !== index));
+  };
+
+  const toggleBreak = (index: number) => {
+    const updated = [...timeSlots];
+    updated[index] = { ...updated[index], isBreak: !updated[index].isBreak };
+    setTimeSlots(updated);
+  };
+
   const days = ['Mon', 'Tues', 'Wed', 'Thurs', 'Fri'];
-  const scheduleTimeSlots = [
-    { time: '8:30 AM – 9:30 AM', short: '8:30-9:30', period: 'Period 1' },
-    { time: '9:30 AM – 10:30 AM', short: '9:30-10:30', period: 'Period 2' },
-    { time: '10:30 AM – 11:30 AM', short: '10:30-11:30', period: 'Period 3' },
-    { time: '11:30 AM – 12:15 PM', short: '11:30-12:15', period: 'Period 4' },
-    { time: '12:15 PM – 12:40 PM', short: '12:15-12:40', period: 'Lunch' },
-    { time: '12:30 PM – 1:15 PM', short: '12:30-1:15', period: 'Period 5' },
-    { time: '1:15 PM – 2:00 PM', short: '1:15-2:00', period: 'Period 6' },
-  ];
 
   const dayColors: { [key: string]: string } = {
     'Mon': 'bg-red-500',
@@ -216,9 +243,12 @@ const TimetableGeneratorUI = () => {
         <Card>
           <CardHeader>
             <CardTitle>Add Teachers & Their Subjects</CardTitle>
+            <p className="text-sm text-muted-foreground mt-2">
+              Teachers must have at least a primary subject. A secondary subject is optional.
+            </p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               <div>
                 <Label>Teacher Name</Label>
                 <Input
@@ -228,11 +258,19 @@ const TimetableGeneratorUI = () => {
                 />
               </div>
               <div>
-                <Label>Subject</Label>
+                <Label>Primary Subject *</Label>
                 <Input
                   placeholder="Mathematics"
-                  value={newTeacher.subject}
-                  onChange={(e) => setNewTeacher({ ...newTeacher, subject: e.target.value })}
+                  value={newTeacher.primarySubject}
+                  onChange={(e) => setNewTeacher({ ...newTeacher, primarySubject: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Secondary Subject (Optional)</Label>
+                <Input
+                  placeholder="Science"
+                  value={newTeacher.secondarySubject}
+                  onChange={(e) => setNewTeacher({ ...newTeacher, secondarySubject: e.target.value })}
                 />
               </div>
               <div className="flex items-end">
@@ -248,7 +286,13 @@ const TimetableGeneratorUI = () => {
                 <div key={teacher.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
                     <h4 className="font-semibold">{teacher.name}</h4>
-                    <p className="text-sm text-muted-foreground">{teacher.subjects.join(', ')}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {teacher.subjects.length === 1 ? (
+                        <>Primary: {teacher.subjects[0]}</>
+                      ) : (
+                        <>Primary: {teacher.subjects[0]} | Secondary: {teacher.subjects[1]}</>
+                      )}
+                    </p>
                   </div>
                   <Button variant="ghost" size="icon" onClick={() => removeTeacher(teacher.id)}>
                     <Trash2 className="h-4 w-4 text-destructive" />
@@ -315,28 +359,98 @@ const TimetableGeneratorUI = () => {
         <Card>
           <CardHeader>
             <CardTitle>Configure School Day Schedule</CardTitle>
+            <p className="text-sm text-muted-foreground mt-2">
+              Add, remove, and configure time slots. Toggle breaks/lunch periods as needed.
+            </p>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Add New Time Slot */}
+            <div className="grid grid-cols-4 gap-4 p-4 bg-muted/30 rounded-lg">
+              <div>
+                <Label>Time Range</Label>
+                <Input
+                  placeholder="7:00 AM – 7:40 AM"
+                  value={newTimeSlot.time}
+                  onChange={(e) => setNewTimeSlot({ ...newTimeSlot, time: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Period Name</Label>
+                <Input
+                  placeholder="Period 1"
+                  value={newTimeSlot.period}
+                  onChange={(e) => setNewTimeSlot({ ...newTimeSlot, period: e.target.value })}
+                />
+              </div>
+              <div className="flex items-end gap-2">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="is-break"
+                    checked={newTimeSlot.isBreak}
+                    onCheckedChange={(checked) => setNewTimeSlot({ ...newTimeSlot, isBreak: checked })}
+                  />
+                  <Label htmlFor="is-break" className="text-sm cursor-pointer">
+                    Break/Lunch
+                  </Label>
+                </div>
+              </div>
+              <div className="flex items-end">
+                <Button onClick={addTimeSlot} className="w-full">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Slot
+                </Button>
+              </div>
+            </div>
+
+            {/* Time Slots List */}
             <div className="space-y-2">
-              <Label>Time Slots (Default Schedule)</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <Label>Time Slots ({timeSlots.length} total, {timeSlots.filter(s => !s.isBreak).length} teaching periods)</Label>
+              <div className="space-y-2 max-h-[400px] overflow-y-auto">
                 {timeSlots.map((slot, idx) => (
-                  <div key={idx} className={`p-3 border rounded-lg ${slot.includes('Break') || slot.includes('Lunch') ? 'bg-amber-50 border-amber-200' : ''}`}>
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">{slot}</span>
-                      {(slot.includes('Break') || slot.includes('Lunch')) && (
-                        <span className="text-xs bg-amber-200 px-2 py-1 rounded">
-                          {slot.includes('Break') ? 'Break' : 'Lunch'}
-                        </span>
-                      )}
+                  <div key={idx} className={`p-4 border-2 rounded-lg transition-colors ${slot.isBreak ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex-1 grid grid-cols-3 gap-4 items-center">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-sm">{slot.period}</span>
+                            {slot.isBreak && (
+                              <span className="text-xs bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 px-2 py-0.5 rounded font-medium">
+                                Break
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-xs text-muted-foreground">{slot.time}</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Duration: {slot.short}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={slot.isBreak}
+                            onCheckedChange={() => toggleBreak(idx)}
+                          />
+                          <Label className="text-xs cursor-pointer" onClick={() => toggleBreak(idx)}>
+                            {slot.isBreak ? 'Break Period' : 'Teaching Period'}
+                          </Label>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="icon" onClick={() => removeTimeSlot(idx)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-            <p className="text-sm text-muted-foreground">
-              * Break and lunch times apply to all teachers and students
-            </p>
+
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <p className="text-sm text-blue-900 dark:text-blue-100">
+                <strong>Total Teaching Periods:</strong> {timeSlots.filter(s => !s.isBreak).length} periods per day
+              </p>
+              <p className="text-xs text-blue-800 dark:text-blue-200 mt-1">
+                Break and lunch times apply to all teachers and students. The timetable generator will automatically skip these periods.
+              </p>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -387,7 +501,7 @@ const TimetableGeneratorUI = () => {
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-blue-500" />
-                  Teaching Periods: {timeSlots.filter(s => !s.includes('Break') && !s.includes('Lunch')).length} per day
+                  Teaching Periods: {timeSlots.filter(s => !s.isBreak).length} per day
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-purple-500" />
@@ -469,8 +583,8 @@ const TimetableGeneratorUI = () => {
                           </div>
                         </div>
                       </th>
-                      {scheduleTimeSlots.map((slot) => (
-                        <th key={slot.time} className="p-2 min-w-[140px]">
+                      {timeSlots.map((slot) => (
+                        <th key={slot.time} className="p-2 min-w-[95px] w-[95px] border-t bg-background">
                           <div className="flex flex-col items-center gap-1">
                             <span className="text-xs font-semibold text-primary">
                               {slot.period}
@@ -494,32 +608,34 @@ const TimetableGeneratorUI = () => {
                             </span>
                           </div>
                         </td>
-                        {scheduleTimeSlots.map((slot) => {
+                        {timeSlots.map((slot) => {
                           const key = `${selectedClass}-${day}-${slot.time}`;
                           const cellText = schedule[key] || '';
-                          const isBreak = slot.period === 'Lunch';
 
                           return (
                             <td
                               key={slot.time}
-                              className={`p-2 border-r border-border cursor-pointer transition-all ${
-                                cellText ? "hover:opacity-80" : "hover:bg-muted/50"
+                              className={`p-2 border-r border-border ${!slot.isBreak ? 'cursor-pointer' : ''} transition-all ${
+                                cellText ? "hover:opacity-80" : !slot.isBreak ? "hover:bg-muted/50" : ""
                               } ${
-                                isBreak ? "bg-muted/20" : ""
+                                slot.isBreak ? "bg-amber-50 dark:bg-amber-900/20" : ""
                               }`}
-                              onClick={() => !isBreak && handleCellClick(day, slot.time)}
+                              onClick={() => !slot.isBreak && handleCellClick(day, slot.time)}
                             >
                               <div className="min-h-[80px] flex flex-col items-center justify-center p-2 gap-1">
                                 {cellText ? (
-                                  <div className={`w-full h-full rounded-lg border-2 p-2 flex flex-col items-center justify-center gap-1 ${subjectColors[cellText] || "bg-gray-100 border-gray-300"}`}>
+                                  <div className={`w-full h-full rounded-lg border-2 p-2 flex flex-col items-center justify-center gap-1 ${subjectColors[cellText] || "bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600"}`}>
                                     <span className="text-xs font-bold text-center">
                                       {cellText}
                                     </span>
                                   </div>
-                                ) : isBreak ? (
-                                  <span className="text-xs text-muted-foreground font-medium">
-                                    {slot.period}
-                                  </span>
+                                ) : slot.isBreak ? (
+                                  <div className="flex flex-col items-center gap-1">
+                                    <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                                    <span className="text-xs text-amber-700 dark:text-amber-300 font-medium">
+                                      {slot.period}
+                                    </span>
+                                  </div>
                                 ) : (
                                   <span className="text-xs text-muted-foreground">
                                     Click to assign

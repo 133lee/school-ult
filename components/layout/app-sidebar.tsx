@@ -91,6 +91,11 @@ const AppSidebar = ({ userRole = "ADMIN", ...props }: AppSidebarProps) => {
                     url: "/admin/timetable",
                     icon: Calendar,
                 },
+                {
+                    title: "Schedule",
+                    url: "/admin/schedule",
+                    icon: CalendarCheck,
+                },
             ],
         },
         {

@@ -12,14 +12,6 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -345,24 +337,24 @@ export default function DepartmentsManagementDashboard() {
             </span>
           </div>
           <div className="flex-1 overflow-auto">
-            <Table>
-              <TableHeader className="sticky top-0 z-20 bg-background">
-                <TableRow>
-                  <TableHead className="bg-background">Department</TableHead>
-                  <TableHead className="bg-background">Department Head</TableHead>
-                  <TableHead className="bg-background">Teachers</TableHead>
-                  <TableHead className="bg-background">Subjects</TableHead>
-                  <TableHead className="bg-background">Status</TableHead>
-                  <TableHead className="w-[50px] bg-background">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <table className="w-full">
+              <thead className="sticky top-0 z-20 bg-background border-b">
+                <tr>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Department</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Department Head</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Teachers</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Subjects</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Status</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background w-[50px]">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
                 {paginatedDepartments.map((dept) => (
-                  <TableRow
+                  <tr
                     key={dept.id}
                     onClick={() => handleRowClick(dept)}
-                    className="cursor-pointer hover:bg-gray-50 transition-colors">
-                    <TableCell>
+                    className="border-b transition-colors hover:bg-muted/50 cursor-pointer">
+                    <td className="p-4 align-middle">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10">
                           <AvatarFallback>
@@ -380,8 +372,8 @@ export default function DepartmentsManagementDashboard() {
                           </p>
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="p-4 align-middle">
                       <div className="text-sm">
                         <p className="font-medium text-gray-800">
                           {dept.departmentHead}
@@ -390,32 +382,32 @@ export default function DepartmentsManagementDashboard() {
                           {dept.officeLocation}
                         </p>
                       </div>
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="p-4 align-middle">
                       <div className="flex items-center gap-1.5">
                         <Users className="h-3 w-3 text-gray-500" />
                         <span className="text-sm font-medium">
                           {dept.totalTeachers}
                         </span>
                       </div>
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="p-4 align-middle">
                       <div className="flex items-center gap-1.5">
                         <BookOpen className="h-3 w-3 text-gray-500" />
                         <span className="text-sm font-medium">
                           {dept.totalSubjects}
                         </span>
                       </div>
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="p-4 align-middle">
                       <span
                         className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusBadgeColor(
                           dept.status
                         )}`}>
                         {dept.status}
                       </span>
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="p-4 align-middle">
                       <DropdownMenu>
                         <DropdownMenuTrigger
                           asChild
@@ -449,11 +441,11 @@ export default function DepartmentsManagementDashboard() {
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
+              </tbody>
+            </table>
           </div>
 
           {/* Pagination */}

@@ -19,14 +19,6 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Search,
   Download,
   Camera,
@@ -436,21 +428,21 @@ function AttendanceTakingSheet({
         {/* Student List */}
         <div className="flex-1 overflow-auto">
           <ScrollArea className="h-full">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">#</TableHead>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Student ID</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <table className="w-full">
+              <thead className="sticky top-0 z-20 bg-background border-b">
+                <tr>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background w-12">#</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Student</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Student ID</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Status</th>
+                  <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground bg-background">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
                 {students.map((student, index) => (
-                  <TableRow key={student.id}>
-                    <TableCell className="font-medium">{index + 1}</TableCell>
-                    <TableCell>
+                  <tr key={student.id} className="border-b transition-colors hover:bg-muted/50">
+                    <td className="p-4 align-middle font-medium">{index + 1}</td>
+                    <td className="p-4 align-middle">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10">
                           <AvatarImage
@@ -471,17 +463,17 @@ function AttendanceTakingSheet({
                           </p>
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="p-4 align-middle">
                       <span className="text-sm">{student.studentId}</span>
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="p-4 align-middle">
                       <Badge
                         className={getStatusColor(student.attendanceStatus)}>
                         {student.attendanceStatus || "Not Marked"}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="p-4 align-middle">
                       <div className="flex gap-2 justify-end">
                         <Button
                           size="sm"
@@ -535,11 +527,11 @@ function AttendanceTakingSheet({
                           Excused
                         </Button>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
+              </tbody>
+            </table>
           </ScrollArea>
         </div>
 
@@ -658,20 +650,20 @@ function AttendanceReportSheet({
         <div className="flex-1 overflow-auto px-6 py-4">
           <h3 className="font-semibold mb-4">Student List</h3>
           <div className="overflow-auto">
-            <Table>
-              <TableHeader className="sticky top-0 z-20 bg-background">
-                <TableRow>
-                  <TableHead className="w-12 bg-background">#</TableHead>
-                  <TableHead className="bg-background">Student</TableHead>
-                  <TableHead className="bg-background">Student ID</TableHead>
-                  <TableHead className="bg-background">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <table className="w-full">
+              <thead className="sticky top-0 z-20 bg-background border-b">
+                <tr>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background w-12">#</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Student</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Student ID</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Status</th>
+                </tr>
+              </thead>
+              <tbody>
                 {students.map((student, index) => (
-                  <TableRow key={student.id}>
-                    <TableCell className="font-medium">{index + 1}</TableCell>
-                    <TableCell>
+                  <tr key={student.id} className="border-b transition-colors hover:bg-muted/50">
+                    <td className="p-4 align-middle font-medium">{index + 1}</td>
+                    <td className="p-4 align-middle">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
                           <AvatarImage
@@ -689,20 +681,20 @@ function AttendanceReportSheet({
                           {student.name}
                         </span>
                       </div>
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="p-4 align-middle">
                       <span className="text-sm">{student.studentId}</span>
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="p-4 align-middle">
                       <Badge
                         className={getStatusColor(student.attendanceStatus)}>
                         {student.attendanceStatus || "Not Marked"}
                       </Badge>
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
+              </tbody>
+            </table>
           </div>
         </div>
 
@@ -1271,10 +1263,9 @@ export default function AttendancePage() {
       {/* View Attendance Per Class Button */}
       <div className="flex justify-center">
         <Button
-          variant="outline"
           size="lg"
           onClick={() => setDetailedAttendanceSheetOpen(true)}
-          className="min-w-[280px]">
+          className="min-w-[280px] bg-black text-white hover:bg-black/90">
           <FileText className="h-5 w-5 mr-2" />
           View Attendance Per Class
         </Button>
