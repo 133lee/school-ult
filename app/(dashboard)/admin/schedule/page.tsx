@@ -18,6 +18,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { toast } from "sonner";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent,
+  EmptyMedia,
+} from "@/components/ui/empty";
 
 interface ScheduleEntry {
   class: string;
@@ -90,6 +99,48 @@ const AdminSchedule = () => {
 
   const [selectedClass, setSelectedClass] = useState("9A");
   const [selectedTeacher, setSelectedTeacher] = useState("all");
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Export schedule as CSV
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      // Create CSV content
+      let csvContent = "Class,Day,Time,Subject,Teacher,Room\n";
+      Object.entries(schedule).forEach(([key, entry]) => {
+        if (selectedClass === "all" || entry.class === selectedClass) {
+          const [classId, day, time] = key.split("-");
+          csvContent += `${classId},${day},${time},"${entry.subject}","${entry.teacher}","${entry.room}"\n`;
+        }
+      });
+
+      // Create blob and download
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `schedule-${selectedClass}-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("Schedule exported successfully");
+    } catch (error) {
+      toast.error("Failed to export schedule");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Print schedule
+  const handlePrint = () => {
+    window.print();
+    toast.success("Opening print dialog");
+  };
 
   // Available classes and teachers
   const classes = ["9A", "9B", "10A", "10B", "11A", "12A"];
@@ -170,11 +221,20 @@ const AdminSchedule = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExport}
+            disabled={isExporting}
+          >
+            <Download className={`h-4 w-4 mr-2 ${isExporting ? 'animate-spin' : ''}`} />
+            {isExporting ? 'Exporting...' : 'Export'}
           </Button>
-          <Button variant="outline" size="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePrint}
+          >
             <Printer className="h-4 w-4 mr-2" />
             Print
           </Button>
@@ -235,98 +295,114 @@ const AdminSchedule = () => {
           <CardTitle>Weekly Schedule - Grade {selectedClass}</CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead className="sticky top-0 z-20 bg-background">
-              <tr>
-                <th className="w-32 p-4 border-r border-b bg-background">
-                  <div className="text-left">
-                    <div className="font-bold text-sm">Grade {selectedClass}</div>
-                    <div className="text-xs text-muted-foreground">
-                      Class Schedule
-                    </div>
-                  </div>
-                </th>
-                {timeSlots.map((slot) => (
-                  <th key={slot.time} className="p-2 min-w-[95px] w-[95px] border-b border-r bg-background">
-                    <div className="flex flex-col items-center gap-1">
-                      <span className="text-xs font-semibold text-primary">
-                        {slot.period}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground">
-                        {slot.short}
-                      </span>
+          {filteredSchedule.length > 0 ? (
+            <table className="w-full border-collapse">
+              <thead className="sticky top-0 z-20 bg-background">
+                <tr>
+                  <th className="w-32 p-4 border-r border-b bg-background">
+                    <div className="text-left">
+                      <div className="font-bold text-sm">Grade {selectedClass}</div>
+                      <div className="text-xs text-muted-foreground">
+                        Class Schedule
+                      </div>
                     </div>
                   </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {days.map((day) => (
-                <tr key={day} className="border-b">
-                  <td className="p-4 border-r">
-                    <div
-                      className={`${dayColors[day]} text-white font-semibold py-3 px-6 rounded shadow-md transform -skew-x-12`}
-                    >
-                      <span className="inline-block transform skew-x-12">
-                        {day}
-                      </span>
-                    </div>
-                  </td>
-                  {timeSlots.map((slot) => {
-                    const key = `${selectedClass}-${day}-${slot.time}`;
-                    const entry = schedule[key];
-
-                    return (
-                      <td
-                        key={slot.time}
-                        className={`p-2 border-r transition-all ${
-                          slot.isBreak ? "bg-amber-50 dark:bg-amber-900/20" : ""
-                        }`}
-                      >
-                        <div className="min-h-[80px] flex flex-col items-center justify-center p-2">
-                          {entry ? (
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div
-                                    className={`w-full h-full rounded-lg border-2 p-2 flex flex-col items-center justify-center gap-1 cursor-pointer ${
-                                      subjectColors[entry.subject] ||
-                                      "bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-                                    }`}
-                                  >
-                                    <span className="text-xs font-bold text-center">
-                                      {entry.subject}
-                                    </span>
-                                    <span className="text-[9px] text-muted-foreground text-center">
-                                      {entry.teacher}
-                                    </span>
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <div className="space-y-1">
-                                    <p className="font-semibold">{entry.subject}</p>
-                                    <p className="text-xs">Teacher: {entry.teacher}</p>
-                                    <p className="text-xs">Room: {entry.room}</p>
-                                    <p className="text-xs">Class: {entry.class}</p>
-                                  </div>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          ) : slot.isBreak ? (
-                            <span className="text-xs text-amber-700 dark:text-amber-300 font-medium">
-                              {slot.period}
-                            </span>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
-                        </div>
-                      </td>
-                    );
-                  })}
+                  {timeSlots.map((slot) => (
+                    <th key={slot.time} className="p-2 min-w-[95px] w-[95px] border-b border-r bg-background">
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-xs font-semibold text-primary">
+                          {slot.period}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {slot.short}
+                        </span>
+                      </div>
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {days.map((day) => (
+                  <tr key={day} className="border-b">
+                    <td className="p-4 border-r">
+                      <div
+                        className={`${dayColors[day]} text-white font-semibold py-3 px-6 rounded shadow-md transform -skew-x-12`}
+                      >
+                        <span className="inline-block transform skew-x-12">
+                          {day}
+                        </span>
+                      </div>
+                    </td>
+                    {timeSlots.map((slot) => {
+                      const key = `${selectedClass}-${day}-${slot.time}`;
+                      const entry = schedule[key];
+
+                      return (
+                        <td
+                          key={slot.time}
+                          className={`p-2 border-r transition-all ${
+                            slot.isBreak ? "bg-amber-50 dark:bg-amber-900/20" : ""
+                          }`}
+                        >
+                          <div className="min-h-[80px] flex flex-col items-center justify-center p-2">
+                            {entry ? (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div
+                                      className={`w-full h-full rounded-lg border-2 p-2 flex flex-col items-center justify-center gap-1 cursor-pointer ${
+                                        subjectColors[entry.subject] ||
+                                        "bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600"
+                                      }`}
+                                    >
+                                      <span className="text-xs font-bold text-center">
+                                        {entry.subject}
+                                      </span>
+                                      <span className="text-[9px] text-muted-foreground text-center">
+                                        {entry.teacher}
+                                      </span>
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <div className="space-y-1">
+                                      <p className="font-semibold">{entry.subject}</p>
+                                      <p className="text-xs">Teacher: {entry.teacher}</p>
+                                      <p className="text-xs">Room: {entry.room}</p>
+                                      <p className="text-xs">Class: {entry.class}</p>
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            ) : slot.isBreak ? (
+                              <span className="text-xs text-amber-700 dark:text-amber-300 font-medium">
+                                {slot.period}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <Empty className="border-0 min-h-[400px]">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Calendar className="h-6 w-6" />
+                </EmptyMedia>
+                <EmptyTitle>No schedule entries found</EmptyTitle>
+                <EmptyDescription>
+                  {selectedClass !== "all" || selectedTeacher !== "all"
+                    ? "No schedule entries match your current filters. Try selecting a different class or teacher."
+                    : "No schedule has been created yet. Schedule entries will appear here once they are added."}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          )}
         </CardContent>
       </Card>
 

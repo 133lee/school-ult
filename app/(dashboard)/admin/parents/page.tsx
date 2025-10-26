@@ -66,6 +66,14 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { toast } from "sonner";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+} from "@/components/ui/empty";
 
 interface Parent {
   id: string;
@@ -211,6 +219,20 @@ export default function ParentsManagementDashboard() {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [openSection, setOpenSection] = useState<string | null>("personal");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      toast.success("Parent data refreshed successfully");
+    } catch (error) {
+      toast.error("Failed to refresh parent data");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const filteredParents = parents.filter((parent) => {
     const matchesSearch =
@@ -286,9 +308,14 @@ export default function ParentsManagementDashboard() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
           </Button>
           <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
             <Button
@@ -404,116 +431,132 @@ export default function ParentsManagementDashboard() {
             </span>
           </div>
           <div className="flex-1 overflow-auto">
-            <table className="w-full">
-              <thead className="sticky top-0 z-20 bg-background border-b">
-                <tr>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Parent/Guardian</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Relationship</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Children</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Contact Information</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Status</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background w-[50px]">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedParents.map((parent) => (
-                  <tr
-                    key={parent.id}
-                    onClick={() => handleRowClick(parent)}
-                    className="border-b transition-colors hover:bg-muted/50 cursor-pointer">
-                    <td className="p-4 align-middle">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage
-                            src={parent.photoUrl}
-                            alt={parent.name}
-                          />
-                          <AvatarFallback>
-                            {parent.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-semibold text-sm">{parent.name}</p>
-                          <p className="text-xs text-gray-500">
-                            {parent.parentId}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-4 align-middle">
-                      <Badge variant="outline">{parent.relationship}</Badge>
-                    </td>
-                    <td className="p-4 align-middle">
-                      <div className="text-sm">
-                        {parent.children.map((child, idx) => (
-                          <p key={idx} className="text-gray-700">
-                            {child}
-                          </p>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="p-4 align-middle">
-                      <div className="text-sm">
-                        <div className="flex items-center gap-1.5 text-gray-700 mb-1">
-                          <Mail className="h-3 w-3" />
-                          <span className="text-xs">{parent.email}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-gray-700">
-                          <Phone className="h-3 w-3" />
-                          <span className="text-xs">{parent.phone}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-4 align-middle">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusBadgeColor(
-                          parent.status
-                        )}`}>
-                        {parent.status}
-                      </span>
-                    </td>
-                    <td className="p-4 align-middle">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          asChild
-                          onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedParent(parent);
-                              setEditDialogOpen(true);
-                            }}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedParent(parent);
-                              setDeleteDialogOpen(true);
-                            }}
-                            className="text-red-600">
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
+            {filteredParents.length > 0 ? (
+              <table className="w-full">
+                <thead className="sticky top-0 z-20 bg-background border-b">
+                  <tr>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Parent/Guardian</th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Relationship</th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Children</th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Contact Information</th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Status</th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background w-[50px]">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {paginatedParents.map((parent) => (
+                    <tr
+                      key={parent.id}
+                      onClick={() => handleRowClick(parent)}
+                      className="border-b transition-colors hover:bg-muted/50 cursor-pointer">
+                      <td className="p-4 align-middle">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage
+                              src={parent.photoUrl}
+                              alt={parent.name}
+                            />
+                            <AvatarFallback>
+                              {parent.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-semibold text-sm">{parent.name}</p>
+                            <p className="text-xs text-gray-500">
+                              {parent.parentId}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 align-middle">
+                        <Badge variant="outline">{parent.relationship}</Badge>
+                      </td>
+                      <td className="p-4 align-middle">
+                        <div className="text-sm">
+                          {parent.children.map((child, idx) => (
+                            <p key={idx} className="text-gray-700">
+                              {child}
+                            </p>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="p-4 align-middle">
+                        <div className="text-sm">
+                          <div className="flex items-center gap-1.5 text-gray-700 mb-1">
+                            <Mail className="h-3 w-3" />
+                            <span className="text-xs">{parent.email}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-gray-700">
+                            <Phone className="h-3 w-3" />
+                            <span className="text-xs">{parent.phone}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 align-middle">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusBadgeColor(
+                            parent.status
+                          )}`}>
+                          {parent.status}
+                        </span>
+                      </td>
+                      <td className="p-4 align-middle">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            asChild
+                            onClick={(e) => e.stopPropagation()}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedParent(parent);
+                                setEditDialogOpen(true);
+                              }}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedParent(parent);
+                                setDeleteDialogOpen(true);
+                              }}
+                              className="text-red-600">
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <Users className="h-6 w-6" />
+                  </EmptyMedia>
+                  <EmptyTitle>No parents found</EmptyTitle>
+                  <EmptyDescription>
+                    {searchQuery || relationshipFilter !== "all" || statusFilter !== "all"
+                      ? "No parents match your current filters. Try adjusting your search criteria."
+                      : "Get started by adding your first parent or guardian to the system."}
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            )}
           </div>
 
           {/* Pagination */}

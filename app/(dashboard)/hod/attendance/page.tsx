@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useHODAuth } from "@/hooks/useHODAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -120,7 +121,8 @@ const students: Student[] = [
   },
 ];
 
-export default function TeacherAttendancePage() {
+export default function HODAttendancePage() {
+  const { currentHOD, isLoading } = useHODAuth();
   const [selectedClass, setSelectedClass] = useState("Class 9A");
   const [date, setDate] = useState<Date>(new Date());
   const [attendanceData, setAttendanceData] = useState<Student[]>(students);
@@ -162,12 +164,24 @@ export default function TeacherAttendancePage() {
     notMarked: attendanceData.filter((s) => s.attendance === null).length,
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!currentHOD) {
+    return null;
+  }
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex items-start justify-between mt-2">
         <div className="flex flex-col space-y-2">
-          <h1 className="text-xl font-bold">Mark Attendance</h1>
+          <h1 className="text-xl font-bold">Mark Attendance ({currentHOD.department})</h1>
           <p className="text-muted-foreground text-sm">
             Record daily attendance for your classes
           </p>

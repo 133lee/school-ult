@@ -59,6 +59,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { toast } from "sonner";
 
 interface Department {
   id: string;
@@ -156,6 +157,35 @@ const departments: Department[] = [
 
 const ITEMS_PER_PAGE = 10;
 
+interface Teacher {
+  id: string;
+  name: string;
+  email: string;
+  status: "Active" | "Inactive";
+  joinYear: string;
+}
+
+// Mock data for department teachers
+const allTeachers: Teacher[] = [
+  { id: "T001", name: "Mr. John Smith", email: "john.smith@school.edu", status: "Active", joinYear: "2015" },
+  { id: "T002", name: "Mrs. Mary Johnson", email: "mary.johnson@school.edu", status: "Active", joinYear: "2018" },
+  { id: "T003", name: "Mr. David Wilson", email: "david.wilson@school.edu", status: "Active", joinYear: "2020" },
+  { id: "T004", name: "Ms. Sarah Brown", email: "sarah.brown@school.edu", status: "Inactive", joinYear: "2019" },
+  { id: "T005", name: "Mr. Robert Garcia", email: "robert.garcia@school.edu", status: "Active", joinYear: "2016" },
+  { id: "T006", name: "Mrs. Emily Davis", email: "emily.davis@school.edu", status: "Active", joinYear: "2021" },
+  { id: "T007", name: "Mr. James Miller", email: "james.miller@school.edu", status: "Active", joinYear: "2017" },
+  { id: "T008", name: "Ms. Lisa Anderson", email: "lisa.anderson@school.edu", status: "Active", joinYear: "2019" },
+];
+
+// Department to teachers mapping
+const departmentMembers: Record<string, string[]> = {
+  "1": ["T001", "T002", "T005", "T007"], // Sciences
+  "2": ["T003", "T004", "T008"], // Languages
+  "3": ["T006"], // Humanities
+  "4": [], // Technology
+  "5": [], // Arts
+};
+
 export default function DepartmentsManagementDashboard() {
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -165,6 +195,9 @@ export default function DepartmentsManagementDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [detailsSheetOpen, setDetailsSheetOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [membersDialogOpen, setMembersDialogOpen] = useState(false);
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [memberSearchQuery, setMemberSearchQuery] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [openSection, setOpenSection] = useState<string | null>("info");
 
@@ -526,7 +559,8 @@ export default function DepartmentsManagementDashboard() {
                     size="sm"
                     className="flex-1"
                     onClick={() => {
-                      alert(`View all ${selectedDepartment.totalTeachers} teachers in ${selectedDepartment.name} department\n\nThis would navigate to Teachers page filtered by department.`);
+                      toast.info(`Navigating to ${selectedDepartment.totalTeachers} teachers in ${selectedDepartment.name}`);
+                      // In a real app: router.push(`/admin/teachers?department=${selectedDepartment?.id}`)
                     }}>
                     <Users className="h-4 w-4 mr-2" />
                     Teachers
@@ -536,12 +570,25 @@ export default function DepartmentsManagementDashboard() {
                     size="sm"
                     className="flex-1"
                     onClick={() => {
-                      alert(`View all ${selectedDepartment.totalSubjects} subjects in ${selectedDepartment.name} department\n\nThis would navigate to Subjects page filtered by department.`);
+                      toast.info(`Navigating to ${selectedDepartment.totalSubjects} subjects in ${selectedDepartment.name}`);
+                      // In a real app: router.push(`/admin/subjects?department=${selectedDepartment?.id}`)
                     }}>
                     <BookOpen className="h-4 w-4 mr-2" />
                     Subjects
                   </Button>
                 </div>
+                <Button
+                  onClick={() => {
+                    const deptMembers = departmentMembers[selectedDepartment.id] || [];
+                    setSelectedMembers(deptMembers);
+                    setMemberSearchQuery("");
+                    setMembersDialogOpen(true);
+                  }}
+                  className="w-full mt-4"
+                  size="sm">
+                  <Users className="h-4 w-4 mr-2" />
+                  Manage Members
+                </Button>
               </SheetHeader>
 
               <ScrollArea className="flex-1">
@@ -765,6 +812,151 @@ export default function DepartmentsManagementDashboard() {
                 setEditDialogOpen(false);
               }}>
               Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Department Members Dialog */}
+      <Dialog open={membersDialogOpen} onOpenChange={setMembersDialogOpen}>
+        <DialogContent className="!w-[90vw] !max-w-[1200px] h-[90vh] max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Manage Department Members</DialogTitle>
+            <DialogDescription>
+              Add or remove members from {selectedDepartment?.name} department
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Two Column Layout */}
+          <div className="flex-1 overflow-hidden grid grid-cols-2 gap-4 min-h-0">
+            {/* Column 1: Available Teachers */}
+            <div className="border rounded-lg p-4 space-y-4 overflow-hidden flex flex-col">
+              <h4 className="font-semibold text-sm shrink-0">Available Teachers</h4>
+
+              <div className="space-y-4 overflow-y-auto flex-1">
+                <div className="space-y-2">
+                  <label htmlFor="member-search" className="text-sm font-medium">
+                    Search Teachers
+                  </label>
+                  <Input
+                    id="member-search"
+                    placeholder="Search by name or email..."
+                    value={memberSearchQuery}
+                    onChange={(e) => setMemberSearchQuery(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  {allTeachers
+                    .filter((teacher) =>
+                      teacher.name
+                        .toLowerCase()
+                        .includes(memberSearchQuery.toLowerCase()) ||
+                      teacher.email
+                        .toLowerCase()
+                        .includes(memberSearchQuery.toLowerCase())
+                    )
+                    .map((teacher) => (
+                      <button
+                        key={teacher.id}
+                        onClick={() => {
+                          if (selectedMembers.includes(teacher.id)) {
+                            setSelectedMembers(
+                              selectedMembers.filter((id) => id !== teacher.id)
+                            );
+                          } else {
+                            setSelectedMembers([...selectedMembers, teacher.id]);
+                          }
+                        }}
+                        className={`w-full text-left p-3 rounded-md transition-colors text-sm border ${
+                          selectedMembers.includes(teacher.id)
+                            ? "bg-green-50 border-green-200"
+                            : "bg-white hover:bg-primary/10 border-muted hover:border-primary cursor-pointer hover:shadow-sm"
+                        }`}>
+                        <div className="font-medium">{teacher.name}</div>
+                        <div className="text-xs opacity-75">{teacher.email}</div>
+                      </button>
+                    ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Column 2: Selected Members */}
+            <div className="border rounded-lg p-4 overflow-hidden flex flex-col">
+              <h4 className="font-semibold text-sm mb-3 shrink-0">
+                Department Members ({selectedMembers.length})
+              </h4>
+
+              {selectedMembers.length > 0 ? (
+                <ScrollArea className="flex-1 border rounded-lg p-2">
+                  <div className="space-y-2">
+                    {selectedMembers.map((memberId) => {
+                      const teacher = allTeachers.find((t) => t.id === memberId);
+                      if (!teacher) return null;
+                      return (
+                        <div
+                          key={memberId}
+                          className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                          <div>
+                            <div className="font-medium text-sm">
+                              {teacher.name}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              Joined {teacher.joinYear}
+                            </div>
+                            <Badge
+                              variant={
+                                teacher.status === "Active"
+                                  ? "default"
+                                  : "secondary"
+                              }
+                              className="mt-1 text-xs">
+                              {teacher.status}
+                            </Badge>
+                          </div>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() =>
+                              setSelectedMembers(
+                                selectedMembers.filter((id) => id !== memberId)
+                              )
+                            }>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              ) : (
+                <div className="flex-1 flex items-center justify-center text-center">
+                  <div className="text-muted-foreground">
+                    <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No members assigned yet</p>
+                    <p className="text-xs opacity-75">
+                      Select teachers from the left to add them
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 shrink-0 border-t pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setMembersDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                toast.success(
+                  `Updated ${selectedDepartment?.name} members (${selectedMembers.length} members)`
+                );
+                setMembersDialogOpen(false);
+              }}>
+              Save Members
             </Button>
           </DialogFooter>
         </DialogContent>

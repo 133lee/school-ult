@@ -92,6 +92,15 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { toast } from "sonner";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 
 interface Student {
   id: string;
@@ -389,6 +398,20 @@ export default function StudentManagementDashboard() {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [openSection, setOpenSection] = useState<string | null>("about");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      toast.success("Student data refreshed successfully");
+    } catch (error) {
+      toast.error("Failed to refresh student data");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const filteredStudents = students.filter((student) => {
     const matchesSearch =
@@ -467,9 +490,14 @@ export default function StudentManagementDashboard() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
           </Button>
           <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
             <Button
@@ -594,34 +622,36 @@ export default function StudentManagementDashboard() {
         </CardHeader>
 
         <CardContent className="flex-1 overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between mb-3 text-sm text-gray-500">
-            <span className="font-medium">
-              Student List ({filteredStudents.length})
-            </span>
-            <span>
-              Showing {startIndex + 1} to{" "}
-              {Math.min(endIndex, filteredStudents.length)} of{" "}
-              {filteredStudents.length}
-            </span>
-          </div>
-          <ScrollArea className="flex-1">
-            <StudentsTable
-              students={paginatedStudents}
-              onRowClick={handleRowClick}
-              onEdit={(student) => {
-                setSelectedStudent(student);
-                setEditDialogOpen(true);
-              }}
-              onDelete={(student) => {
-                setSelectedStudent(student);
-                setDeleteDialogOpen(true);
-              }}
-              showActions={true}
-            />
-          </ScrollArea>
+          {filteredStudents.length > 0 ? (
+            <>
+              <div className="flex items-center justify-between mb-3 text-sm text-gray-500">
+                <span className="font-medium">
+                  Student List ({filteredStudents.length})
+                </span>
+                <span>
+                  Showing {startIndex + 1} to{" "}
+                  {Math.min(endIndex, filteredStudents.length)} of{" "}
+                  {filteredStudents.length}
+                </span>
+              </div>
+              <ScrollArea className="flex-1">
+                <StudentsTable
+                  students={paginatedStudents}
+                  onRowClick={handleRowClick}
+                  onEdit={(student) => {
+                    setSelectedStudent(student);
+                    setEditDialogOpen(true);
+                  }}
+                  onDelete={(student) => {
+                    setSelectedStudent(student);
+                    setDeleteDialogOpen(true);
+                  }}
+                  showActions={true}
+                />
+              </ScrollArea>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
+              {/* Pagination */}
+              {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2 mt-4 pt-4 border-t">
               <Button
                 variant="outline"
@@ -656,6 +686,24 @@ export default function StudentManagementDashboard() {
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
+          )}
+            </>
+          ) : (
+            <Empty className="h-96">
+              <EmptyContent>
+                <EmptyMedia variant="icon">
+                  <Users className="h-6 w-6" />
+                </EmptyMedia>
+                <EmptyHeader>
+                  <EmptyTitle>No students found</EmptyTitle>
+                  <EmptyDescription>
+                    {searchQuery || classFilter !== "all" || gradeFilter !== "all" || statusFilter !== "all"
+                      ? "Try adjusting your filters or search terms"
+                      : "Start by adding new students to the system"}
+                  </EmptyDescription>
+                </EmptyHeader>
+              </EmptyContent>
+            </Empty>
           )}
         </CardContent>
       </Card>

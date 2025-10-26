@@ -65,6 +65,20 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { toast } from "sonner";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+} from "@/components/ui/empty";
+
+interface SubjectGradePeriods {
+  gradeLevel: string;
+  periodsPerWeek: number;
+  compulsory: boolean;
+}
 
 interface Subject {
   id: string;
@@ -75,6 +89,7 @@ interface Subject {
   description: string;
   creditHours: number;
   gradeLevel: string[];
+  gradePeriods: SubjectGradePeriods[]; // Periods per week by grade level
   totalTeachers: number;
   totalStudents: number;
   status: "Active" | "Inactive";
@@ -90,6 +105,12 @@ const subjects: Subject[] = [
     description: "Advanced Mathematics covering Algebra, Calculus, and Geometry",
     creditHours: 4,
     gradeLevel: ["Grade 9", "Grade 10", "Grade 11", "Grade 12"],
+    gradePeriods: [
+      { gradeLevel: "Grade 9", periodsPerWeek: 6, compulsory: true },
+      { gradeLevel: "Grade 10", periodsPerWeek: 7, compulsory: true },
+      { gradeLevel: "Grade 11", periodsPerWeek: 7, compulsory: true },
+      { gradeLevel: "Grade 12", periodsPerWeek: 7, compulsory: true },
+    ],
     totalTeachers: 3,
     totalStudents: 85,
     status: "Active",
@@ -97,12 +118,18 @@ const subjects: Subject[] = [
   {
     id: "2",
     subjectId: "SUB002",
-    name: "English Literature",
+    name: "English Language",
     code: "ENG-101",
     department: "Languages",
-    description: "Study of classic and modern literature",
+    description: "Study of English language, comprehension, and communication",
     creditHours: 3,
-    gradeLevel: ["Grade 9", "Grade 10"],
+    gradeLevel: ["Grade 9", "Grade 10", "Grade 11", "Grade 12"],
+    gradePeriods: [
+      { gradeLevel: "Grade 9", periodsPerWeek: 6, compulsory: true },
+      { gradeLevel: "Grade 10", periodsPerWeek: 6, compulsory: true },
+      { gradeLevel: "Grade 11", periodsPerWeek: 6, compulsory: true },
+      { gradeLevel: "Grade 12", periodsPerWeek: 6, compulsory: true },
+    ],
     totalTeachers: 2,
     totalStudents: 72,
     status: "Active",
@@ -116,6 +143,11 @@ const subjects: Subject[] = [
     description: "Introduction to Physics: Mechanics and Thermodynamics",
     creditHours: 4,
     gradeLevel: ["Grade 10", "Grade 11", "Grade 12"],
+    gradePeriods: [
+      { gradeLevel: "Grade 10", periodsPerWeek: 6, compulsory: false },
+      { gradeLevel: "Grade 11", periodsPerWeek: 6, compulsory: false },
+      { gradeLevel: "Grade 12", periodsPerWeek: 6, compulsory: false },
+    ],
     totalTeachers: 2,
     totalStudents: 65,
     status: "Active",
@@ -128,7 +160,13 @@ const subjects: Subject[] = [
     department: "Sciences",
     description: "Basic Chemistry: Organic and Inorganic compounds",
     creditHours: 4,
-    gradeLevel: ["Grade 9", "Grade 10"],
+    gradeLevel: ["Grade 9", "Grade 10", "Grade 11", "Grade 12"],
+    gradePeriods: [
+      { gradeLevel: "Grade 9", periodsPerWeek: 6, compulsory: false },
+      { gradeLevel: "Grade 10", periodsPerWeek: 6, compulsory: false },
+      { gradeLevel: "Grade 11", periodsPerWeek: 6, compulsory: false },
+      { gradeLevel: "Grade 12", periodsPerWeek: 6, compulsory: false },
+    ],
     totalTeachers: 1,
     totalStudents: 58,
     status: "Active",
@@ -136,12 +174,18 @@ const subjects: Subject[] = [
   {
     id: "5",
     subjectId: "SUB005",
-    name: "History",
-    code: "HIST-101",
+    name: "Social Studies",
+    code: "SS-101",
     department: "Humanities",
-    description: "World History: Ancient to Modern",
+    description: "Social Studies: History, Geography, and Civic Education",
     creditHours: 3,
-    gradeLevel: ["Grade 11", "Grade 12"],
+    gradeLevel: ["Grade 9", "Grade 10", "Grade 11", "Grade 12"],
+    gradePeriods: [
+      { gradeLevel: "Grade 9", periodsPerWeek: 6, compulsory: true },
+      { gradeLevel: "Grade 10", periodsPerWeek: 5, compulsory: false },
+      { gradeLevel: "Grade 11", periodsPerWeek: 5, compulsory: false },
+      { gradeLevel: "Grade 12", periodsPerWeek: 5, compulsory: false },
+    ],
     totalTeachers: 1,
     totalStudents: 45,
     status: "Active",
@@ -149,12 +193,18 @@ const subjects: Subject[] = [
   {
     id: "6",
     subjectId: "SUB006",
-    name: "Computer Science",
+    name: "Computer Studies",
     code: "CS-101",
     department: "Technology",
     description: "Introduction to Programming and Computer Fundamentals",
     creditHours: 3,
-    gradeLevel: ["Grade 9", "Grade 10", "Grade 11"],
+    gradeLevel: ["Grade 9", "Grade 10", "Grade 11", "Grade 12"],
+    gradePeriods: [
+      { gradeLevel: "Grade 9", periodsPerWeek: 4, compulsory: false },
+      { gradeLevel: "Grade 10", periodsPerWeek: 4, compulsory: false },
+      { gradeLevel: "Grade 11", periodsPerWeek: 4, compulsory: false },
+      { gradeLevel: "Grade 12", periodsPerWeek: 4, compulsory: false },
+    ],
     totalTeachers: 2,
     totalStudents: 92,
     status: "Active",
@@ -167,7 +217,13 @@ const subjects: Subject[] = [
     department: "Sciences",
     description: "Life Sciences: Cell Biology and Ecology",
     creditHours: 4,
-    gradeLevel: ["Grade 9", "Grade 10", "Grade 11"],
+    gradeLevel: ["Grade 9", "Grade 10", "Grade 11", "Grade 12"],
+    gradePeriods: [
+      { gradeLevel: "Grade 9", periodsPerWeek: 6, compulsory: true },
+      { gradeLevel: "Grade 10", periodsPerWeek: 6, compulsory: false },
+      { gradeLevel: "Grade 11", periodsPerWeek: 6, compulsory: false },
+      { gradeLevel: "Grade 12", periodsPerWeek: 6, compulsory: false },
+    ],
     totalTeachers: 2,
     totalStudents: 68,
     status: "Active",
@@ -175,15 +231,21 @@ const subjects: Subject[] = [
   {
     id: "8",
     subjectId: "SUB008",
-    name: "Art & Design",
-    code: "ART-101",
-    department: "Arts",
-    description: "Visual Arts and Creative Design",
+    name: "Religious Education",
+    code: "RE-101",
+    department: "Humanities",
+    description: "Religious and Moral Education",
     creditHours: 2,
-    gradeLevel: ["Grade 9", "Grade 10"],
+    gradeLevel: ["Grade 9", "Grade 10", "Grade 11", "Grade 12"],
+    gradePeriods: [
+      { gradeLevel: "Grade 9", periodsPerWeek: 5, compulsory: true },
+      { gradeLevel: "Grade 10", periodsPerWeek: 4, compulsory: false },
+      { gradeLevel: "Grade 11", periodsPerWeek: 4, compulsory: false },
+      { gradeLevel: "Grade 12", periodsPerWeek: 4, compulsory: false },
+    ],
     totalTeachers: 1,
     totalStudents: 34,
-    status: "Inactive",
+    status: "Active",
   },
 ];
 
@@ -201,6 +263,20 @@ export default function SubjectsManagementDashboard() {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [openSection, setOpenSection] = useState<string | null>("subject");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      toast.success("Subject data refreshed successfully");
+    } catch (error) {
+      toast.error("Failed to refresh subject data");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const filteredSubjects = subjects.filter((subject) => {
     const matchesSearch =
@@ -272,9 +348,14 @@ export default function SubjectsManagementDashboard() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
           </Button>
           <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
             <Button
@@ -392,112 +473,128 @@ export default function SubjectsManagementDashboard() {
             </span>
           </div>
           <div className="flex-1 overflow-auto">
-            <table className="w-full">
-              <thead className="sticky top-0 z-20 bg-background border-b">
-                <tr>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Subject</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Department</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Teacher</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Students</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Status</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background w-[50px]">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedSubjects.map((subject) => (
-                  <tr
-                    key={subject.id}
-                    onClick={() => handleRowClick(subject)}
-                    className="border-b transition-colors hover:bg-muted/50 cursor-pointer">
-                    <td className="p-4 align-middle">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10">
-                          <AvatarFallback>
-                            {subject.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")
-                              .slice(0, 2)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-semibold text-sm">
-                            {subject.name}
+            {filteredSubjects.length > 0 ? (
+              <table className="w-full">
+                <thead className="sticky top-0 z-20 bg-background border-b">
+                  <tr>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Subject</th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Department</th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Teacher</th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Students</th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Status</th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background w-[50px]">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedSubjects.map((subject) => (
+                    <tr
+                      key={subject.id}
+                      onClick={() => handleRowClick(subject)}
+                      className="border-b transition-colors hover:bg-muted/50 cursor-pointer">
+                      <td className="p-4 align-middle">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-10 w-10">
+                            <AvatarFallback>
+                              {subject.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")
+                                .slice(0, 2)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-semibold text-sm">
+                              {subject.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {subject.code}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 align-middle">
+                        <Badge variant="outline">{subject.department}</Badge>
+                      </td>
+                      <td className="p-4 align-middle">
+                        <div className="text-sm">
+                          <p className="font-medium text-gray-800">
+                            {subject.totalTeachers} {subject.totalTeachers === 1 ? 'Teacher' : 'Teachers'}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {subject.code}
+                            {subject.creditHours} Credit Hours
                           </p>
                         </div>
-                      </div>
-                    </td>
-                    <td className="p-4 align-middle">
-                      <Badge variant="outline">{subject.department}</Badge>
-                    </td>
-                    <td className="p-4 align-middle">
-                      <div className="text-sm">
-                        <p className="font-medium text-gray-800">
-                          {subject.totalTeachers} {subject.totalTeachers === 1 ? 'Teacher' : 'Teachers'}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {subject.creditHours} Credit Hours
-                        </p>
-                      </div>
-                    </td>
-                    <td className="p-4 align-middle">
-                      <div className="flex items-center gap-1.5">
-                        <Users className="h-3 w-3 text-gray-500" />
-                        <span className="text-sm font-medium">
-                          {subject.totalStudents}
+                      </td>
+                      <td className="p-4 align-middle">
+                        <div className="flex items-center gap-1.5">
+                          <Users className="h-3 w-3 text-gray-500" />
+                          <span className="text-sm font-medium">
+                            {subject.totalStudents}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="p-4 align-middle">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusBadgeColor(
+                            subject.status
+                          )}`}>
+                          {subject.status}
                         </span>
-                      </div>
-                    </td>
-                    <td className="p-4 align-middle">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusBadgeColor(
-                          subject.status
-                        )}`}>
-                        {subject.status}
-                      </span>
-                    </td>
-                    <td className="p-4 align-middle">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          asChild
-                          onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedSubject(subject);
-                              setEditDialogOpen(true);
-                            }}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedSubject(subject);
-                              setDeleteDialogOpen(true);
-                            }}
-                            className="text-red-600">
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      </td>
+                      <td className="p-4 align-middle">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            asChild
+                            onClick={(e) => e.stopPropagation()}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedSubject(subject);
+                                setEditDialogOpen(true);
+                              }}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedSubject(subject);
+                                setDeleteDialogOpen(true);
+                              }}
+                              className="text-red-600">
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <BookOpen className="h-6 w-6" />
+                  </EmptyMedia>
+                  <EmptyTitle>No subjects found</EmptyTitle>
+                  <EmptyDescription>
+                    {searchQuery || departmentFilter !== "all" || statusFilter !== "all"
+                      ? "No subjects match your current filters. Try adjusting your search criteria."
+                      : "Get started by adding your first subject to the curriculum."}
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            )}
           </div>
 
           {/* Pagination */}
@@ -578,7 +675,8 @@ export default function SubjectsManagementDashboard() {
                     size="sm"
                     className="flex-1"
                     onClick={() => {
-                      alert(`View all students enrolled in ${selectedSubject.name}\n\nThis would navigate to Students page with a filter for this subject.`);
+                      toast.info(`Navigating to students enrolled in ${selectedSubject?.name}`);
+                      // In a real app: router.push(`/admin/students?subject=${selectedSubject?.id}`)
                     }}>
                     <Users className="h-4 w-4 mr-2" />
                     Students
@@ -588,7 +686,8 @@ export default function SubjectsManagementDashboard() {
                     size="sm"
                     className="flex-1"
                     onClick={() => {
-                      alert(`View materials for ${selectedSubject.name}\n\nThis would open a materials management interface.`);
+                      toast.info(`Opening materials for ${selectedSubject?.name}`);
+                      // In a real app: open materials modal or navigate to materials page
                     }}>
                     <BookOpen className="h-4 w-4 mr-2" />
                     Materials
@@ -718,6 +817,49 @@ export default function SubjectsManagementDashboard() {
                             Total: {selectedSubject.gradeLevel.length} levels
                           </p>
                         </div>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  {/* Periods per Week by Grade - Collapsible */}
+                  <Collapsible
+                    open={openSection === "periods"}
+                    onOpenChange={(isOpen) =>
+                      setOpenSection(isOpen ? "periods" : null)
+                    }
+                    className="border rounded-lg">
+                    <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50 transition-colors">
+                      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Periods per Week (Timetable Reference)
+                      </h3>
+                      <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 data-[state=open]:rotate-180" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
+                      <div className="px-4 pb-4">
+                        <div className="pt-2 space-y-2">
+                          {selectedSubject.gradePeriods.map((gp, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                              <div className="flex-1">
+                                <p className="text-sm font-medium">{gp.gradeLevel}</p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className="text-sm text-muted-foreground">
+                                    {gp.periodsPerWeek} periods/week
+                                  </span>
+                                  {gp.compulsory && (
+                                    <Badge variant="default" className="text-xs">
+                                      Compulsory
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          💡 These period allocations are the default values for timetable generation. Schools can override them per timetable instance.
+                        </p>
                       </div>
                     </CollapsibleContent>
                   </Collapsible>

@@ -47,6 +47,15 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent,
+  EmptyMedia,
+} from "@/components/ui/empty";
 
 interface Assessment {
   id: string;
@@ -231,14 +240,14 @@ export default function AdminAssessmentsPage() {
 
   const handleApprove = () => {
     console.log("Approving assessment:", selectedAssessment?.id);
-    alert("Assessment approved and results published!");
+    toast.success("Assessment approved and results published!");
     setApproveDialogOpen(false);
     setSelectedAssessment(null);
   };
 
   const handleReject = () => {
     console.log("Rejecting assessment:", selectedAssessment?.id);
-    alert("Assessment rejected. Teacher has been notified.");
+    toast.info("Assessment rejected. Teacher has been notified.");
     setRejectDialogOpen(false);
     setSelectedAssessment(null);
   };
@@ -253,7 +262,7 @@ export default function AdminAssessmentsPage() {
     // Simulate notification to teacher
     const notificationMessage = `New assessment "${newAssessment.title}" has been created for ${newAssessment.class} - ${newAssessment.subject}. Please enter grades by ${format(newAssessment.scheduledDate, "MMM d, yyyy")}.`;
 
-    alert(`Assessment created successfully!\n\nNotification sent to ${newAssessment.teacher}:\n"${notificationMessage}"`);
+    toast.success(`Assessment created successfully and notification sent to ${newAssessment.teacher}`);
 
     // Reset form and close dialog
     setNewAssessment({
@@ -307,7 +316,7 @@ export default function AdminAssessmentsPage() {
     setEditingConfig(null);
 
     // Show success message
-    alert(`${configName} configuration saved successfully!`);
+    toast.success(`${configName} configuration saved successfully!`);
   };
 
   const stats = {
@@ -676,99 +685,121 @@ export default function AdminAssessmentsPage() {
               <CardTitle className="text-base">Assessments for Review</CardTitle>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[calc(100vh-28rem)]">
-                <div className="space-y-3">
-                  {filteredAssessments.map((assessment) => {
-                    const config = getStatusConfig(assessment.status);
-                    const StatusIcon = config.icon;
+              {filteredAssessments.length > 0 ? (
+                <ScrollArea className="h-[calc(100vh-28rem)]">
+                  <div className="space-y-3">
+                    {filteredAssessments.map((assessment) => {
+                      const config = getStatusConfig(assessment.status);
+                      const StatusIcon = config.icon;
 
-                    return (
-                      <div
-                        key={assessment.id}
-                        className="p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1 space-y-2">
-                            <div className="flex items-start gap-3">
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-base">
-                                  {assessment.title}
-                                </h3>
-                                <p className="text-sm text-muted-foreground mt-0.5">
-                                  {assessment.class} • {assessment.subject} • {assessment.teacher}
+                      return (
+                        <div
+                          key={assessment.id}
+                          className="p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 space-y-2">
+                              <div className="flex items-start gap-3">
+                                <div className="flex-1">
+                                  <h3 className="font-semibold text-base">
+                                    {assessment.title}
+                                  </h3>
+                                  <p className="text-sm text-muted-foreground mt-0.5">
+                                    {assessment.class} • {assessment.subject} • {assessment.teacher}
+                                  </p>
+                                </div>
+                                <Badge className={config.color}>
+                                  <StatusIcon className="h-3 w-3 mr-1" />
+                                  {config.label}
+                                </Badge>
+                              </div>
+
+                              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                <span>Type: {assessment.type}</span>
+                                <span>•</span>
+                                <span>Max Score: {assessment.maxScore}</span>
+                                <span>•</span>
+                                <span className="flex items-center gap-1">
+                                  <CalendarIcon className="h-3 w-3" />
+                                  {format(assessment.scheduledDate, "MMM d, yyyy")}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <div className="flex-1 bg-muted rounded-full h-2">
+                                  <div
+                                    className="bg-primary h-2 rounded-full transition-all"
+                                    style={{
+                                      width: `${
+                                        (assessment.studentsGraded / assessment.totalStudents) * 100
+                                      }%`,
+                                    }}
+                                  />
+                                </div>
+                                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                  {assessment.studentsGraded}/{assessment.totalStudents} students graded
+                                </span>
+                              </div>
+
+                              {assessment.submittedDate && (
+                                <p className="text-xs text-muted-foreground">
+                                  Submitted: {format(assessment.submittedDate, "MMM d, yyyy")}
                                 </p>
-                              </div>
-                              <Badge className={config.color}>
-                                <StatusIcon className="h-3 w-3 mr-1" />
-                                {config.label}
-                              </Badge>
+                              )}
                             </div>
 
-                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                              <span>Type: {assessment.type}</span>
-                              <span>•</span>
-                              <span>Max Score: {assessment.maxScore}</span>
-                              <span>•</span>
-                              <span className="flex items-center gap-1">
-                                <CalendarIcon className="h-3 w-3" />
-                                {format(assessment.scheduledDate, "MMM d, yyyy")}
-                              </span>
+                            <div className="flex items-center gap-2 ml-4">
+                              {assessment.status === "pending" && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-red-600 hover:text-red-700"
+                                    onClick={() => {
+                                      setSelectedAssessment(assessment);
+                                      setRejectDialogOpen(true);
+                                    }}>
+                                    <XCircle className="h-4 w-4 mr-1" />
+                                    Reject
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedAssessment(assessment);
+                                      setApproveDialogOpen(true);
+                                    }}>
+                                    <CheckCircle className="h-4 w-4 mr-1" />
+                                    Approve
+                                  </Button>
+                                </>
+                              )}
                             </div>
-
-                            <div className="flex items-center gap-2">
-                              <div className="flex-1 bg-muted rounded-full h-2">
-                                <div
-                                  className="bg-primary h-2 rounded-full transition-all"
-                                  style={{
-                                    width: `${
-                                      (assessment.studentsGraded / assessment.totalStudents) * 100
-                                    }%`,
-                                  }}
-                                />
-                              </div>
-                              <span className="text-xs text-muted-foreground whitespace-nowrap">
-                                {assessment.studentsGraded}/{assessment.totalStudents} students graded
-                              </span>
-                            </div>
-
-                            {assessment.submittedDate && (
-                              <p className="text-xs text-muted-foreground">
-                                Submitted: {format(assessment.submittedDate, "MMM d, yyyy")}
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="flex items-center gap-2 ml-4">
-                            {assessment.status === "pending" && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-red-600 hover:text-red-700"
-                                  onClick={() => {
-                                    setSelectedAssessment(assessment);
-                                    setRejectDialogOpen(true);
-                                  }}>
-                                  <XCircle className="h-4 w-4 mr-1" />
-                                  Reject
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedAssessment(assessment);
-                                    setApproveDialogOpen(true);
-                                  }}>
-                                  <CheckCircle className="h-4 w-4 mr-1" />
-                                  Approve
-                                </Button>
-                              </>
-                            )}
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </ScrollArea>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              ) : (
+                <Empty className="border-0">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <FileText className="h-6 w-6" />
+                    </EmptyMedia>
+                    <EmptyTitle>No assessments found</EmptyTitle>
+                    <EmptyDescription>
+                      {searchQuery || classFilter !== "all" || subjectFilter !== "all" || statusFilter !== "all"
+                        ? "No assessments match your current filters. Try adjusting your search criteria."
+                        : "No assessments have been created yet. Create your first assessment to get started."}
+                    </EmptyDescription>
+                  </EmptyHeader>
+                  <EmptyContent>
+                    <Button onClick={() => setCreateDialogOpen(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Assessment
+                    </Button>
+                  </EmptyContent>
+                </Empty>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

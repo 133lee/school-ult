@@ -83,6 +83,69 @@ export default function AdminSettingsPage() {
     toast.success("Notification settings saved successfully!");
   };
 
+  // Handle logo upload
+  const handleUploadLogo = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = (e: any) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        if (file.size > 2 * 1024 * 1024) {
+          toast.error("File size must be less than 2MB");
+          return;
+        }
+        toast.success(`Logo uploaded: ${file.name}`);
+      }
+    };
+    input.click();
+  };
+
+  // Handle data exports
+  const handleExportData = async (dataType: string) => {
+    try {
+      // Simulate export process
+      await new Promise(resolve => setTimeout(resolve, 600));
+
+      let csvContent = "";
+      if (dataType === "students") {
+        csvContent = "Student ID,Name,Class,Email\nSTU001,John Doe,9A,john@school.com\nSTU002,Jane Smith,9B,jane@school.com\n";
+      } else if (dataType === "teachers") {
+        csvContent = "Teacher ID,Name,Subject,Department,Email\nTCH001,Dr. Sarah Johnson,Mathematics,Science,sarah@school.com\n";
+      } else if (dataType === "attendance") {
+        csvContent = "Date,Student,Status\n2024-10-25,STU001,Present\n";
+      } else if (dataType === "grades") {
+        csvContent = "Student,Subject,Score,Grade\nJohn Doe,Mathematics,85,A\n";
+      }
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `${dataType}-export-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success(`${dataType} data exported successfully`);
+    } catch (error) {
+      toast.error(`Failed to export ${dataType} data`);
+    }
+  };
+
+  // Handle backup creation
+  const handleCreateBackup = async () => {
+    try {
+      // Simulate backup process
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const backupDate = new Date().toLocaleString();
+      toast.success(`Database backup created successfully on ${backupDate}`);
+    } catch (error) {
+      toast.error("Failed to create backup");
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -193,7 +256,7 @@ export default function AdminSettingsPage() {
                   <div className="w-24 h-24 rounded-lg border-2 border-dashed border-border flex items-center justify-center bg-muted">
                     <School className="h-10 w-10 text-muted-foreground" />
                   </div>
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={handleUploadLogo}>
                     <Upload className="h-4 w-4 mr-2" />
                     Upload Logo
                   </Button>
@@ -654,10 +717,10 @@ export default function AdminSettingsPage() {
                 <div>
                   <h3 className="font-semibold mb-3">Export Data</h3>
                   <div className="grid grid-cols-2 gap-4">
-                    <Button variant="outline">Export Students Data</Button>
-                    <Button variant="outline">Export Teachers Data</Button>
-                    <Button variant="outline">Export Attendance Records</Button>
-                    <Button variant="outline">Export Grade Reports</Button>
+                    <Button variant="outline" onClick={() => handleExportData('students')}>Export Students Data</Button>
+                    <Button variant="outline" onClick={() => handleExportData('teachers')}>Export Teachers Data</Button>
+                    <Button variant="outline" onClick={() => handleExportData('attendance')}>Export Attendance Records</Button>
+                    <Button variant="outline" onClick={() => handleExportData('grades')}>Export Grade Reports</Button>
                   </div>
                 </div>
                 <Separator />
@@ -686,7 +749,7 @@ export default function AdminSettingsPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <Button className="w-full">
+                    <Button className="w-full" onClick={handleCreateBackup}>
                       <Database className="h-4 w-4 mr-2" />
                       Create Backup Now
                     </Button>

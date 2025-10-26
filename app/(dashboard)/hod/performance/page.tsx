@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useHODAuth } from "@/hooks/useHODAuth";
 import {
   Card,
   CardContent,
@@ -156,7 +157,8 @@ const topPerformers = studentsPerformance
   .sort((a, b) => b.averageScore - a.averageScore)
   .slice(0, 5);
 
-export default function TeacherPerformanceOverview() {
+export default function HODPerformanceOverview() {
+  const { currentHOD, isLoading } = useHODAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [classFilter, setClassFilter] = useState("all");
   const [subjectFilter, setSubjectFilter] = useState("all");
@@ -594,14 +596,26 @@ export default function TeacherPerformanceOverview() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!currentHOD) {
+    return null;
+  }
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex items-start justify-between mt-2">
         <div className="flex flex-col space-y-2">
-          <h1 className="text-xl font-bold">Performance Overview</h1>
+          <h1 className="text-xl font-bold">Performance</h1>
           <p className="text-muted-foreground text-sm">
-            Monitor student performance across all your subjects and classes
+            Monitor your student performance across all your subjects and classes
           </p>
         </div>
       </div>

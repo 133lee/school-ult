@@ -15,6 +15,7 @@ const DUMMY_USERS = {
   "admin@school.com": { password: "admin123", role: "ADMIN", name: "Admin User" },
   "teacher@school.com": { password: "teacher123", role: "TEACHER", name: "Teacher User" },
   "student@school.com": { password: "student123", role: "STUDENT", name: "Student User" },
+  "hod@school.com": { password: "hod123", role: "HOD", name: "HOD User", department: "Sciences" },
 };
 
 export function LoginForm({
@@ -64,6 +65,9 @@ export function LoginForm({
         break;
       case "STUDENT":
         router.push("/student");
+        break;
+      case "HOD":
+        router.push("/hod");
         break;
       default:
         setError("Invalid user role");
@@ -134,6 +138,9 @@ export function LoginForm({
                 </p>
                 <p>
                   <strong>Teacher:</strong> teacher@school.com / teacher123
+                </p>
+                <p>
+                  <strong>HOD:</strong> hod@school.com / hod123
                 </p>
                 <p>
                   <strong>Student:</strong> student@school.com / student123

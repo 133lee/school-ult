@@ -69,6 +69,16 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { toast } from "sonner";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { TeacherAssignmentDialog } from "@/components/dialogs/assignments";
 
 interface Teacher {
   id: string;
@@ -216,6 +226,32 @@ export default function TeacherManagementDashboard() {
   const [sendingInvites, setSendingInvites] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [openSection, setOpenSection] = useState<string | null>("professional");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [assignmentDialogOpen, setAssignmentDialogOpen] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      toast.success("Teacher data refreshed successfully");
+    } catch (error) {
+      toast.error("Failed to refresh teacher data");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleAssignTeacher = async (
+    teacherId: string,
+    classId: string,
+    subject: string
+  ) => {
+    // TODO: Implement backend API call
+    // For now, just show success message
+    console.log(`Assigning teacher ${teacherId} to class ${classId} for ${subject}`);
+    toast.success("Assignment will be saved to backend");
+  };
 
   const filteredTeachers = teachers.filter((teacher) => {
     const matchesSearch =
@@ -307,9 +343,14 @@ export default function TeacherManagementDashboard() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
           </Button>
           <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
             <Button
@@ -461,29 +502,31 @@ export default function TeacherManagementDashboard() {
         </CardHeader>
 
         <CardContent className="flex-1 overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between mb-3 text-sm text-gray-500">
-            <span className="font-medium">
-              Teacher List ({filteredTeachers.length})
-            </span>
-            <span>
-              Showing {startIndex + 1} to{" "}
-              {Math.min(endIndex, filteredTeachers.length)} of{" "}
-              {filteredTeachers.length}
-            </span>
-          </div>
-          <div className="flex-1 overflow-auto">
-            <table className="w-full">
-              <thead className="sticky top-0 z-20 bg-background border-b">
-                <tr>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Teacher</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Subject & Department</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Contact Information</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Status</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background w-[50px]">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedTeachers.map((teacher) => (
+          {filteredTeachers.length > 0 ? (
+            <>
+              <div className="flex items-center justify-between mb-3 text-sm text-gray-500">
+                <span className="font-medium">
+                  Teacher List ({filteredTeachers.length})
+                </span>
+                <span>
+                  Showing {startIndex + 1} to{" "}
+                  {Math.min(endIndex, filteredTeachers.length)} of{" "}
+                  {filteredTeachers.length}
+                </span>
+              </div>
+              <div className="flex-1 overflow-auto">
+                <table className="w-full">
+                  <thead className="sticky top-0 z-20 bg-background border-b">
+                    <tr>
+                      <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Teacher</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Subject & Department</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Contact Information</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background">Status</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground bg-background w-[50px]">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedTeachers.map((teacher) => (
                   <tr
                     key={teacher.id}
                     onClick={() => handleRowClick(teacher)}
@@ -578,14 +621,14 @@ export default function TeacherManagementDashboard() {
                       </DropdownMenu>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-4 pt-4 border-t">
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-4 pt-4 border-t">
               <Button
                 variant="outline"
                 size="sm"
@@ -618,7 +661,25 @@ export default function TeacherManagementDashboard() {
                 Next
                 <ChevronRight className="h-4 w-4" />
               </Button>
-            </div>
+              </div>
+              )}
+            </>
+          ) : (
+            <Empty className="h-96">
+              <EmptyContent>
+                <EmptyMedia variant="icon">
+                  <BookOpen className="h-6 w-6" />
+                </EmptyMedia>
+                <EmptyHeader>
+                  <EmptyTitle>No teachers found</EmptyTitle>
+                  <EmptyDescription>
+                    {searchQuery || departmentFilter !== "all" || statusFilter !== "all"
+                      ? "Try adjusting your filters or search terms"
+                      : "Start by adding new teachers to the system"}
+                  </EmptyDescription>
+                </EmptyHeader>
+              </EmptyContent>
+            </Empty>
           )}
         </CardContent>
       </Card>
@@ -805,7 +866,7 @@ export default function TeacherManagementDashboard() {
                     </CollapsibleTrigger>
                     <CollapsibleContent className="data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
                       <div className="px-4 pb-4">
-                        <div className="pt-2">
+                        <div className="pt-2 space-y-4">
                           <div className="flex flex-wrap gap-2">
                             {selectedTeacher.classesAssigned.map((className, index) => (
                               <Badge key={index} variant="secondary">
@@ -813,9 +874,20 @@ export default function TeacherManagementDashboard() {
                               </Badge>
                             ))}
                           </div>
-                          <p className="text-xs text-muted-foreground mt-3">
-                            Total: {selectedTeacher.classesAssigned.length} classes
-                          </p>
+                          <div className="space-y-2">
+                            <p className="text-xs text-muted-foreground">
+                              Total: {selectedTeacher.classesAssigned.length} classes
+                            </p>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setAssignmentDialogOpen(true)}
+                              className="w-full"
+                            >
+                              <BookOpen className="h-4 w-4 mr-2" />
+                              Manage Assignments
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </CollapsibleContent>
@@ -932,6 +1004,27 @@ export default function TeacherManagementDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Teacher Assignment Dialog */}
+      <TeacherAssignmentDialog
+        open={assignmentDialogOpen}
+        onOpenChange={setAssignmentDialogOpen}
+        teacher={selectedTeacher}
+        availableClasses={[
+          { id: "1", name: "Class 9A", gradeLevel: "Grade 9", subjects: ["Mathematics", "English", "Physics", "Chemistry", "History"] },
+          { id: "2", name: "Class 9B", gradeLevel: "Grade 9", subjects: ["Mathematics", "English", "Physics", "Chemistry", "Geography"] },
+          { id: "3", name: "Class 10A", gradeLevel: "Grade 10", subjects: ["Mathematics", "English", "Physics", "Chemistry", "Biology"] },
+          { id: "4", name: "Class 10B", gradeLevel: "Grade 10", subjects: ["Mathematics", "English", "Physics", "Chemistry", "Computer Science"] },
+          { id: "5", name: "Class 11A", gradeLevel: "Grade 11", subjects: ["Mathematics", "English", "Physics", "Chemistry", "Biology"] },
+          { id: "6", name: "Class 12A", gradeLevel: "Grade 12", subjects: ["Mathematics", "English", "Physics", "Chemistry", "Computer Science"] },
+        ]}
+        onAssign={handleAssignTeacher}
+        currentAssignments={selectedTeacher?.classesAssigned.map((cls) => ({
+          classId: cls,
+          className: cls,
+          subject: selectedTeacher.subject || "",
+        })) || []}
+      />
     </div>
   );
 }

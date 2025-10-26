@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 
 interface AuthGuardProps {
   children: React.ReactNode;
-  allowedRoles?: ("ADMIN" | "TEACHER" | "STUDENT")[];
+  allowedRoles?: ("ADMIN" | "TEACHER" | "STUDENT" | "HOD")[];
 }
 
 export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
@@ -33,6 +33,9 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
             break;
           case "STUDENT":
             router.push("/student");
+            break;
+          case "HOD":
+            router.push("/hod");
             break;
         }
       }

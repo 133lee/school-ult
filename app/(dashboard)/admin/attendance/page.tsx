@@ -41,6 +41,15 @@ import {
 import { format } from "date-fns";
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 
 interface Student {
   id: string;
@@ -559,6 +568,7 @@ function AttendanceReportSheet({
   date,
   classFilter,
   onAmendments,
+  onExport,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -566,6 +576,7 @@ function AttendanceReportSheet({
   date: Date;
   classFilter: string;
   onAmendments: () => void;
+  onExport: () => void;
 }) {
   const presentCount = students.filter(
     (s) => s.attendanceStatus === "present"
@@ -705,7 +716,7 @@ function AttendanceReportSheet({
             Make Amendments
           </Button>
           <div className="flex gap-2">
-            <Button variant="outline">
+            <Button variant="outline" onClick={onExport}>
               <Download className="h-4 w-4 mr-2" />
               Export Report
             </Button>
@@ -729,6 +740,7 @@ function DetailedAttendanceSheet({
   onTeacherChange,
   onDateFromChange,
   onDateToChange,
+  onExportGrid,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -740,6 +752,7 @@ function DetailedAttendanceSheet({
   onTeacherChange: (teacher: string) => void;
   onDateFromChange: (date: Date) => void;
   onDateToChange: (date: Date) => void;
+  onExportGrid: () => void;
 }) {
   const [gridViewOpen, setGridViewOpen] = useState(false);
   // Mock attendance data per student
@@ -777,7 +790,7 @@ function DetailedAttendanceSheet({
                 Review attendance records taken by teachers
               </p>
             </div>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={onExportGrid}>
               <Download className="h-4 w-4 mr-2" />
               Export Report
             </Button>
@@ -953,7 +966,7 @@ function DetailedAttendanceSheet({
                   Visual grid view of attendance for {format(dateFrom, "MMM d, yyyy")}
                 </p>
               </div>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={onExportGrid}>
                 <Download className="h-4 w-4 mr-2" />
                 Export Grid
               </Button>
@@ -1102,6 +1115,59 @@ export default function AttendancePage() {
   const [detailedDateFrom, setDetailedDateFrom] = useState<Date>(new Date());
   const [detailedDateTo, setDetailedDateTo] = useState<Date>(new Date());
 
+  // Export handlers
+  const handleExportReport = async (type: string) => {
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 600));
+
+      let csvContent = "Student ID,Name,Class,Present,Absent,Late,Excused\n";
+      submittedAttendance.forEach(student => {
+        csvContent += `${student.studentId},${student.name},${student.class},1,0,0,0\n`;
+      });
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `attendance-report-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("Report exported successfully");
+    } catch (error) {
+      toast.error("Failed to export report");
+    }
+  };
+
+  const handleExportGrid = async () => {
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 600));
+
+      let csvContent = "Class,Day,Student,Status\n";
+      sheetFilteredStudents.forEach(student => {
+        csvContent += `${student.class},Monday,${student.name},Present\n`;
+      });
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `attendance-grid-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("Grid exported successfully");
+    } catch (error) {
+      toast.error("Failed to export grid");
+    }
+  };
+
   // Filter students for main view
   const filteredStudents = students.filter((student) => {
     const matchesSearch =
@@ -1184,7 +1250,11 @@ export default function AttendancePage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleExportReport('main')}
+          >
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
@@ -1330,6 +1400,7 @@ export default function AttendancePage() {
         date={date}
         classFilter={sheetClassFilter}
         onAmendments={handleAmendments}
+        onExport={() => handleExportReport('report')}
       />
 
       {/* Detailed Attendance Per Class Sheet */}
@@ -1344,6 +1415,7 @@ export default function AttendancePage() {
         onTeacherChange={setDetailedTeacherFilter}
         onDateFromChange={setDetailedDateFrom}
         onDateToChange={setDetailedDateTo}
+        onExportGrid={handleExportGrid}
       />
     </div>
   );

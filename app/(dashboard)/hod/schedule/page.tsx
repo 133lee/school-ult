@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { useHODAuth } from "@/hooks/useHODAuth";
 import { Filter, Maximize2, Minimize2, Printer, Clock, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,9 +45,11 @@ interface ScheduleEntry {
   notes: string;
 }
 
-const TeacherSchedule = () => {
-  // Teacher info
-  const teacherName = "Mr. John Smith";
+const HODSchedule = () => {
+  const { currentHOD, isLoading } = useHODAuth();
+
+  // Default values if not yet loaded
+  const teacherName = currentHOD?.name || "Department Head";
   const teacherSubjects = ["Mathematics", "Physics"];
 
   // Sample schedule data for realistic view (updated to match new time slots)
@@ -340,6 +343,18 @@ const TeacherSchedule = () => {
 
     return filtered;
   }, [schedule, selectedClass, selectedSubject]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!currentHOD) {
+    return null;
+  }
 
   return (
     <TooltipProvider>
@@ -689,4 +704,4 @@ const TeacherSchedule = () => {
   );
 };
 
-export default TeacherSchedule;
+export default HODSchedule;

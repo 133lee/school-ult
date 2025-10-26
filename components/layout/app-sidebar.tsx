@@ -32,7 +32,7 @@ import {NavFooter} from "@/components/nav-footer";
 import {NavUser} from "@/components/layout/nav-user";
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-    userRole?: "ADMIN" | "TEACHER";
+    userRole?: "ADMIN" | "TEACHER" | "HOD";
 }
 
 const AppSidebar = ({ userRole = "ADMIN", ...props }: AppSidebarProps) => {
@@ -198,8 +198,91 @@ const AppSidebar = ({ userRole = "ADMIN", ...props }: AppSidebarProps) => {
         },
     ];
 
-    const navGroups = userRole === "TEACHER" ? teacherNavGroups : adminNavGroups;
-    const homeUrl = userRole === "TEACHER" ? "/teacher" : "/admin";
+    const hodNavGroups = [
+        {
+            label: "Overview",
+            items: [
+                {
+                    title: "Dashboard",
+                    url: "/hod",
+                    icon: Home,
+                },
+                {
+                    title: "Performance",
+                    url: "/hod/performance",
+                    icon: BarChart3,
+                },
+            ],
+        },
+        {
+            label: "My Teaching",
+            items: [
+                {
+                    title: "My Classes",
+                    url: "/hod/my-classes",
+                    icon: BookOpen,
+                },
+                {
+                    title: "My Students",
+                    url: "/hod/my-students",
+                    icon: Users,
+                },
+                {
+                    title: "Schedule",
+                    url: "/hod/schedule",
+                    icon: Calendar,
+                },
+            ],
+        },
+        {
+            label: "Academic Work",
+            items: [
+                {
+                    title: "Grades",
+                    url: "/hod/grades",
+                    icon: ClipboardList,
+                },
+                {
+                    title: "Assessments",
+                    url: "/hod/assessments",
+                    icon: FileText,
+                },
+                {
+                    title: "Attendance",
+                    url: "/hod/attendance",
+                    icon: CalendarCheck,
+                },
+            ],
+        },
+        {
+            label: "Department",
+            items: [
+                {
+                    title: "Department Management",
+                    url: "/hod/department",
+                    icon: Building2,
+                },
+                {
+                    title: "Reports",
+                    url: "/hod/reports",
+                    icon: FileText,
+                },
+            ],
+        },
+        {
+            label: "System",
+            items: [
+                {
+                    title: "Settings",
+                    url: "/hod/settings",
+                    icon: Settings,
+                },
+            ],
+        },
+    ];
+
+    const navGroups = userRole === "ADMIN" ? adminNavGroups : userRole === "HOD" ? hodNavGroups : teacherNavGroups;
+    const homeUrl = userRole === "ADMIN" ? "/admin" : userRole === "HOD" ? "/hod" : "/teacher";
 
 
 
@@ -222,10 +305,10 @@ const AppSidebar = ({ userRole = "ADMIN", ...props }: AppSidebarProps) => {
             </SidebarContent>
             <SidebarFooter>
                 <NavUser user={{
-                    name: userRole === "ADMIN" ? "Diết Lam" : "John Mwangi",
-                    email: userRole === "ADMIN" ? "admin@school.com" : "teacher@school.com",
+                    name: userRole === "ADMIN" ? "Diết Lam" : userRole === "HOD" ? "Dr. Samuel Kipchoge" : "John Mwangi",
+                    email: userRole === "ADMIN" ? "admin@school.com" : userRole === "HOD" ? "hod@school.com" : "teacher@school.com",
                     avatar: "/avatars/user.jpg",
-                    role: userRole === "ADMIN" ? "Admin" : "Teacher"
+                    role: userRole === "ADMIN" ? "Admin" : userRole === "HOD" ? "Department Head" : "Teacher"
                 }} />
             </SidebarFooter>
         </Sidebar>

@@ -15,7 +15,15 @@
       "Bash(if exist nul del /f nul)",
       "Bash(npm run build:*)",
       "Bash(dir /s \"c:\\xampp\\htdocs\\Webstorm\\school-ult\\app\")",
-      "Bash(dir /s \"c:\\xampp\\htdocs\\Webstorm\\school-ult\\components\")"
+      "Bash(dir /s \"c:\\xampp\\htdocs\\Webstorm\\school-ult\\components\")",
+      "Bash(npx shadcn@latest add checkbox:*)",
+      "Bash(awk:*)",
+      "Bash(for file in assessments performance schedule my-students reports settings)",
+      "Bash(do grep -n \"^export default function\" \"c:\\xampp\\htdocs\\Webstorm\\school-ult\\app\\(dashboard)\\hod$file\\page.tsx\")",
+      "Bash(done)",
+      "Bash(for f in performance schedule my-students reports settings)",
+      "Bash(do echo \"=== $f ===\")",
+      "Bash(wc:*)"
     ],
     "deny": [],
     "ask": []

@@ -24,6 +24,7 @@ import {
   ChevronDown,
   GraduationCap,
   ClipboardList,
+  BookOpen,
 } from "lucide-react";
 
 interface Class {
@@ -48,6 +49,7 @@ interface ClassDetailsSheetProps {
   onOpenChange: (open: boolean) => void;
   onViewStudents?: () => void;
   onViewSchedule?: () => void;
+  onManageTeachers?: () => void;
   showActionButtons?: boolean;
   isClassTeacher?: boolean;
 }
@@ -58,6 +60,7 @@ export function ClassDetailsSheet({
   onOpenChange,
   onViewStudents,
   onViewSchedule,
+  onManageTeachers,
   showActionButtons = true,
   isClassTeacher = false,
 }: ClassDetailsSheetProps) {
@@ -95,38 +98,52 @@ export function ClassDetailsSheet({
             </div>
           </div>
           {showActionButtons && (
-            <div className="flex gap-2 mt-4">
+            <div className="flex flex-col gap-2 mt-4">
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => {
+                    if (onViewStudents) {
+                      onViewStudents();
+                    } else {
+                      alert(
+                        `View all students in ${classItem.name}\n\nThis would navigate to Students page filtered by class.`
+                      );
+                    }
+                  }}>
+                  <Users className="h-4 w-4 mr-2" />
+                  Students
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => {
+                    if (onViewSchedule) {
+                      onViewSchedule();
+                    } else {
+                      alert(
+                        `View schedule for ${classItem.name}\n\nSchedule: ${classItem.schedule}\nRoom: ${classItem.room}`
+                      );
+                    }
+                  }}>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Schedule
+                </Button>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1"
+                className="w-full"
                 onClick={() => {
-                  if (onViewStudents) {
-                    onViewStudents();
-                  } else {
-                    alert(
-                      `View all students in ${classItem.name}\n\nThis would navigate to Students page filtered by class.`
-                    );
+                  if (onManageTeachers) {
+                    onManageTeachers();
                   }
                 }}>
-                <Users className="h-4 w-4 mr-2" />
-                Students
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1"
-                onClick={() => {
-                  if (onViewSchedule) {
-                    onViewSchedule();
-                  } else {
-                    alert(
-                      `View schedule for ${classItem.name}\n\nSchedule: ${classItem.schedule}\nRoom: ${classItem.room}`
-                    );
-                  }
-                }}>
-                <Calendar className="h-4 w-4 mr-2" />
-                Schedule
+                <BookOpen className="h-4 w-4 mr-2" />
+                Manage Teachers
               </Button>
             </div>
           )}

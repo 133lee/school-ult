@@ -60,6 +60,15 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { toast } from "sonner";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+} from "@/components/ui/empty";
+import { ClassAssignmentDialog, StudentAssignmentDialog } from "@/components/dialogs/assignments";
 
 interface Class {
   id: string;
@@ -177,6 +186,43 @@ export default function ClassesManagementDashboard() {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [openSection, setOpenSection] = useState<string | null>("details");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [assignmentDialogOpen, setAssignmentDialogOpen] = useState(false);
+  const [studentAssignmentDialogOpen, setStudentAssignmentDialogOpen] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      toast.success("Class data refreshed successfully");
+    } catch (error) {
+      toast.error("Failed to refresh class data");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleAssignClass = async (
+    teacherId: string,
+    classId: string,
+    subject: string
+  ) => {
+    // TODO: Implement backend API call
+    // For now, just show success message
+    console.log(`Assigning teacher ${teacherId} to class ${classId} for ${subject}`);
+    toast.success("Assignment will be saved to backend");
+  };
+
+  const handleAssignStudent = async (
+    studentId: string,
+    classId: string
+  ) => {
+    // TODO: Implement backend API call
+    // For now, just show success message
+    console.log(`Assigning student ${studentId} to class ${classId}`);
+    toast.success("Assignment will be saved to backend");
+  };
 
   const filteredClasses = classes.filter((classItem) => {
     const matchesSearch =
@@ -237,9 +283,14 @@ export default function ClassesManagementDashboard() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
           </Button>
           <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
             <Button
@@ -349,26 +400,44 @@ export default function ClassesManagementDashboard() {
             <span className="font-medium">
               Class List ({filteredClasses.length})
             </span>
-            <span>
-              Showing {startIndex + 1} to{" "}
-              {Math.min(endIndex, filteredClasses.length)} of{" "}
-              {filteredClasses.length}
-            </span>
+            <Button
+              size="sm"
+              onClick={() => setStudentAssignmentDialogOpen(true)}
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Assign Students
+            </Button>
           </div>
           <ScrollArea className="flex-1">
-            <ClassesTable
-              classes={paginatedClasses}
-              onRowClick={handleRowClick}
-              onEdit={(classItem) => {
-                setSelectedClass(classItem);
-                setEditDialogOpen(true);
-              }}
-              onDelete={(classItem) => {
-                setSelectedClass(classItem);
-                setDeleteDialogOpen(true);
-              }}
-              showActions={true}
-            />
+            {filteredClasses.length > 0 ? (
+              <ClassesTable
+                classes={paginatedClasses}
+                onRowClick={handleRowClick}
+                onEdit={(classItem) => {
+                  setSelectedClass(classItem);
+                  setEditDialogOpen(true);
+                }}
+                onDelete={(classItem) => {
+                  setSelectedClass(classItem);
+                  setDeleteDialogOpen(true);
+                }}
+                showActions={true}
+              />
+            ) : (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <GraduationCap className="h-6 w-6" />
+                  </EmptyMedia>
+                  <EmptyTitle>No classes found</EmptyTitle>
+                  <EmptyDescription>
+                    {searchQuery || gradeLevelFilter !== "all" || statusFilter !== "all"
+                      ? "No classes match your current filters. Try adjusting your search criteria."
+                      : "Get started by creating your first class section."}
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            )}
           </ScrollArea>
 
           {/* Pagination */}
@@ -417,6 +486,7 @@ export default function ClassesManagementDashboard() {
         open={detailsSheetOpen}
         onOpenChange={setDetailsSheetOpen}
         showActionButtons={true}
+        onManageTeachers={() => setAssignmentDialogOpen(true)}
       />
 
       {/* Delete Dialog */}
@@ -520,6 +590,49 @@ export default function ClassesManagementDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Class Assignment Dialog */}
+      <ClassAssignmentDialog
+        open={assignmentDialogOpen}
+        onOpenChange={setAssignmentDialogOpen}
+        classItem={selectedClass}
+        availableTeachers={[
+          { id: "1", name: "Dr. Sarah Johnson", subject: "Mathematics", primarySubject: "Mathematics", secondarySubject: "Physics" },
+          { id: "2", name: "Mr. James Wilson", subject: "English Literature", primarySubject: "English", secondarySubject: "Literature" },
+          { id: "3", name: "Ms. Emily Chen", subject: "Physics", primarySubject: "Physics", secondarySubject: "Mathematics" },
+          { id: "4", name: "Dr. Michael Brown", subject: "Chemistry", primarySubject: "Chemistry", secondarySubject: undefined },
+          { id: "5", name: "Mrs. Lisa Anderson", subject: "History", primarySubject: "History", secondarySubject: undefined },
+          { id: "6", name: "Mr. David Martinez", subject: "Computer Science", primarySubject: "Computer Science", secondarySubject: undefined },
+        ]}
+        onAssign={handleAssignClass}
+        currentAssignments={[]}
+      />
+
+      {/* Student Assignment Dialog */}
+      <StudentAssignmentDialog
+        open={studentAssignmentDialogOpen}
+        onOpenChange={setStudentAssignmentDialogOpen}
+        availableClasses={classes.map((cls) => ({
+          id: cls.id,
+          name: cls.name,
+          gradeLevel: cls.gradeLevel,
+          capacity: cls.capacity,
+        }))}
+        availableStudents={[
+          { id: "s1", name: "Ahmed Ali", studentId: "STU001", gradeLevel: "Grade 9", status: "Active" },
+          { id: "s2", name: "Fatima Hassan", studentId: "STU002", gradeLevel: "Grade 9", status: "Active" },
+          { id: "s3", name: "Mohamed Ibrahim", studentId: "STU003", gradeLevel: "Grade 9", status: "Active" },
+          { id: "s4", name: "Layla Ahmed", studentId: "STU004", gradeLevel: "Grade 10", status: "Active" },
+          { id: "s5", name: "Omar Khalid", studentId: "STU005", gradeLevel: "Grade 10", status: "Active" },
+          { id: "s6", name: "Noor Mahmoud", studentId: "STU006", gradeLevel: "Grade 10", status: "Active" },
+          { id: "s7", name: "Hana Rashid", studentId: "STU007", gradeLevel: "Grade 11", status: "Active" },
+          { id: "s8", name: "Zain Abdullah", studentId: "STU008", gradeLevel: "Grade 11", status: "Active" },
+          { id: "s9", name: "Maha Saleh", studentId: "STU009", gradeLevel: "Grade 12", status: "Active" },
+          { id: "s10", name: "Karim Hassan", studentId: "STU010", gradeLevel: "Grade 12", status: "Active" },
+        ]}
+        onAssign={handleAssignStudent}
+        currentAssignments={{}}
+      />
     </div>
   );
 }
