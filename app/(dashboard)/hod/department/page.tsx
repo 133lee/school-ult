@@ -18,6 +18,8 @@ import {
   X,
   Calendar,
   BookOpen,
+  Bell,
+  Megaphone,
 } from "lucide-react";
 import { useHODAuth } from "@/hooks/useHODAuth";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +29,15 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 interface Teacher {
@@ -50,6 +60,8 @@ export default function HODDepartmentManagement() {
   const [currentView, setCurrentView] = useState<ViewType>("overview");
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<string>("");
+  const [isNoticeDialogOpen, setIsNoticeDialogOpen] = useState(false);
+  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
 
   // Department subjects mapping
   const departmentSubjects: Record<string, string[]> = {
@@ -223,15 +235,39 @@ export default function HODDepartmentManagement() {
         </Badge>
       </div>
 
-      {/* Search Box */}
-      <div className="relative">
-        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search teachers by name, email, or subject..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
+      {/* Search and Actions Bar */}
+      <div className="flex items-center gap-3">
+        {/* Compact Search */}
+        <div className="relative w-80">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search teachers..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 h-9 text-sm"
+          />
+        </div>
+
+        {/* Department Notice/Event Button */}
+        <div className="ml-auto flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-2"
+            onClick={() => setIsNoticeDialogOpen(true)}
+          >
+            <Bell className="h-4 w-4" />
+            Create Notice
+          </Button>
+          <Button
+            size="sm"
+            className="gap-2"
+            onClick={() => setIsEventDialogOpen(true)}
+          >
+            <Calendar className="h-4 w-4" />
+            Schedule Event
+          </Button>
+        </div>
       </div>
 
       {/* Two Column Layout */}
@@ -857,6 +893,136 @@ export default function HODDepartmentManagement() {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Create Notice Dialog */}
+      <Dialog open={isNoticeDialogOpen} onOpenChange={setIsNoticeDialogOpen}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-blue-500/10">
+                <Bell className="h-5 w-5 text-blue-600" />
+              </div>
+              Create Department Notice
+            </DialogTitle>
+            <DialogDescription>
+              Send an important notice to all members of the {currentDepartment} Department
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Notice Title</label>
+              <Input placeholder="Enter notice title..." className="w-full" />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Notice Message</label>
+              <Textarea
+                placeholder="Enter your notice message..."
+                className="w-full min-h-32"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Priority</label>
+              <select className="w-full p-2 border rounded-md text-sm">
+                <option value="normal">Normal</option>
+                <option value="important">Important</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox id="send-email" />
+              <label htmlFor="send-email" className="text-sm cursor-pointer">
+                Also send via email
+              </label>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setIsNoticeDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button className="flex-1 gap-2">
+                <Megaphone className="h-4 w-4" />
+                Send Notice
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Schedule Event Dialog */}
+      <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-green-500/10">
+                <Calendar className="h-5 w-5 text-green-600" />
+              </div>
+              Schedule Department Event
+            </DialogTitle>
+            <DialogDescription>
+              Create a new event for all members of the {currentDepartment} Department
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Event Title</label>
+              <Input placeholder="Enter event title..." className="w-full" />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Event Description</label>
+              <Textarea
+                placeholder="Enter event description..."
+                className="w-full min-h-24"
+              />
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Event Date</label>
+                <Input type="date" className="w-full" />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Event Time</label>
+                <Input type="time" className="w-full" />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Location</label>
+              <Input placeholder="Enter event location..." className="w-full" />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Event Type</label>
+              <select className="w-full p-2 border rounded-md text-sm">
+                <option value="meeting">Department Meeting</option>
+                <option value="training">Training Session</option>
+                <option value="workshop">Workshop</option>
+                <option value="seminar">Seminar</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox id="send-reminder" />
+              <label htmlFor="send-reminder" className="text-sm cursor-pointer">
+                Send reminder 24 hours before event
+              </label>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setIsEventDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button className="flex-1 gap-2">
+                <Calendar className="h-4 w-4" />
+                Create Event
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
