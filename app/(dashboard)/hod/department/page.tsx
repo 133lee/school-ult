@@ -6,193 +6,177 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Users,
-  BookOpen,
   Search,
-  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Plus,
   Trash2,
-  Eye,
+  FileText,
+  BarChart3,
+  ClipboardList,
+  UserCheck,
+  X,
+  Calendar,
 } from "lucide-react";
 import { useHODAuth } from "@/hooks/useHODAuth";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
-interface DepartmentTeacher {
+interface Teacher {
   id: string;
   name: string;
   email: string;
   subjects: string[];
   status: "Active" | "Inactive";
   joinYear: number;
+  classes: string[];
 }
 
-interface ClassAssignment {
-  classId: string;
-  className: string;
-  gradeLevel: string;
-  teacherId: string;
-  teacherName: string;
-  subject: string;
-  term: string;
-}
-
-interface Class {
-  id: string;
-  name: string;
-  gradeLevel: string;
-  capacity: number;
-  status: "Active" | "Inactive";
-}
+type ViewType = "overview" | "attendance" | "performance" | "comparison" | "classLists";
 
 export default function HODDepartmentManagement() {
   const { currentHOD, isLoading } = useHODAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedTerm, setSelectedTerm] = useState("Term 1");
-  const [expandedClass, setExpandedClass] = useState<string | null>(null);
+  const [isLeftColumnCollapsed, setIsLeftColumnCollapsed] = useState(false);
+  const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
+  const [currentView, setCurrentView] = useState<ViewType>("overview");
 
-  // Mock department teachers data
-  const allDepartmentTeachers: Record<string, DepartmentTeacher[]> = {
-    Sciences: [
-      {
-        id: "t1",
-        name: "Dr. Jane Omondi",
-        email: "jane.omondi@school.com",
-        subjects: ["Mathematics"],
-        status: "Active",
-        joinYear: 2018,
-      },
-      {
-        id: "t2",
-        name: "Mr. Peter Kipchoge",
-        email: "peter.kipchoge@school.com",
-        subjects: ["Physics"],
-        status: "Active",
-        joinYear: 2019,
-      },
-      {
-        id: "t3",
-        name: "Ms. Alice Njoroge",
-        email: "alice.njoroge@school.com",
-        subjects: ["Chemistry", "Biology"],
-        status: "Active",
-        joinYear: 2020,
-      },
-      {
-        id: "t4",
-        name: "Mr. Solomon Kiplagat",
-        email: "solomon.kiplagat@school.com",
-        subjects: ["Biology"],
-        status: "Active",
-        joinYear: 2021,
-      },
-    ],
-    Humanities: [
-      {
-        id: "t5",
-        name: "Ms. Grace Mutua",
-        email: "grace.mutua@school.com",
-        subjects: ["History", "Geography"],
-        status: "Active",
-        joinYear: 2019,
-      },
-      {
-        id: "t6",
-        name: "Mr. David Kiplagat",
-        email: "david.kiplagat@school.com",
-        subjects: ["English"],
-        status: "Active",
-        joinYear: 2020,
-      },
-    ],
+  // Department subjects mapping
+  const departmentSubjects: Record<string, string[]> = {
+    Sciences: ["Mathematics", "Physics", "Chemistry", "Biology"],
+    Humanities: ["History", "Geography", "English", "Kiswahili"],
+    Languages: ["English", "Kiswahili", "French"],
+    Arts: ["Music", "Art", "Drama"],
   };
 
-  // Class assignments data
-  const classAssignments: ClassAssignment[] = [
+  // Mock all teachers data
+  const allTeachers: Teacher[] = [
     {
-      classId: "c1",
-      className: "Grade 9A",
-      gradeLevel: "Grade 9",
-      teacherId: "t1",
-      teacherName: "Dr. Jane Omondi",
-      subject: "Mathematics",
-      term: "Term 1",
+      id: "t1",
+      name: "Dr. Jane Omondi",
+      email: "jane.omondi@school.com",
+      subjects: ["Mathematics"],
+      status: "Active",
+      joinYear: 2018,
+      classes: ["Grade 9A", "Grade 9B", "Grade 10A"],
     },
     {
-      classId: "c2",
-      className: "Grade 9B",
-      gradeLevel: "Grade 9",
-      teacherId: "t1",
-      teacherName: "Dr. Jane Omondi",
-      subject: "Mathematics",
-      term: "Term 1",
+      id: "t2",
+      name: "Mr. Peter Kipchoge",
+      email: "peter.kipchoge@school.com",
+      subjects: ["Physics"],
+      status: "Active",
+      joinYear: 2019,
+      classes: ["Grade 9A", "Grade 10B"],
     },
     {
-      classId: "c3",
-      className: "Grade 10A",
-      gradeLevel: "Grade 10",
-      teacherId: "t1",
-      teacherName: "Dr. Jane Omondi",
-      subject: "Mathematics",
-      term: "Term 1",
+      id: "t3",
+      name: "Ms. Alice Njoroge",
+      email: "alice.njoroge@school.com",
+      subjects: ["Chemistry", "Biology"],
+      status: "Active",
+      joinYear: 2020,
+      classes: ["Grade 10A", "Grade 11B"],
     },
     {
-      classId: "c4",
-      className: "Grade 9A",
-      gradeLevel: "Grade 9",
-      teacherId: "t2",
-      teacherName: "Mr. Peter Kipchoge",
-      subject: "Physics",
-      term: "Term 1",
+      id: "t4",
+      name: "Mr. Solomon Kiplagat",
+      email: "solomon.kiplagat@school.com",
+      subjects: ["Biology"],
+      status: "Active",
+      joinYear: 2021,
+      classes: ["Grade 9B", "Grade 10B"],
     },
     {
-      classId: "c5",
-      className: "Grade 10B",
-      gradeLevel: "Grade 10",
-      teacherId: "t2",
-      teacherName: "Mr. Peter Kipchoge",
-      subject: "Physics",
-      term: "Term 1",
+      id: "t5",
+      name: "Ms. Grace Mutua",
+      email: "grace.mutua@school.com",
+      subjects: ["History", "Geography"],
+      status: "Active",
+      joinYear: 2019,
+      classes: ["Grade 9A", "Grade 10A"],
+    },
+    {
+      id: "t6",
+      name: "Mr. David Kiplagat",
+      email: "david.kiplagat@school.com",
+      subjects: ["English"],
+      status: "Active",
+      joinYear: 2020,
+      classes: ["Grade 11A"],
+    },
+    {
+      id: "t7",
+      name: "Ms. Sarah Wanjiku",
+      email: "sarah.wanjiku@school.com",
+      subjects: ["Mathematics", "Physics"],
+      status: "Active",
+      joinYear: 2017,
+      classes: ["Grade 11A", "Grade 11B"],
     },
   ];
 
-  // Get teachers for current HOD's department
-  const departmentTeachers = allDepartmentTeachers[currentHOD?.department || "Sciences"] || [];
+  // Mock department members (teachers already in the department)
+  const [departmentMemberIds, setDepartmentMemberIds] = useState<string[]>([
+    "t1",
+    "t2",
+    "t3",
+    "t4",
+    "t7",
+  ]);
 
-  // Filter teachers based on search
-  const filteredTeachers = departmentTeachers.filter(
+  const currentDepartment = currentHOD?.department || "Sciences";
+  const currentDepartmentSubjects = departmentSubjects[currentDepartment] || [];
+
+  // Get department members
+  const departmentMembers = allTeachers.filter((t) =>
+    departmentMemberIds.includes(t.id)
+  );
+
+  // Get available teachers (not in department but teach department subjects)
+  const availableTeachers = allTeachers.filter(
+    (teacher) =>
+      !departmentMemberIds.includes(teacher.id) &&
+      teacher.subjects.some((subject) =>
+        currentDepartmentSubjects.includes(subject)
+      )
+  );
+
+  // Filter based on search
+  const filteredMembers = departmentMembers.filter(
     (teacher) =>
       teacher.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       teacher.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      teacher.subjects.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase()))
+      teacher.subjects.some((s) =>
+        s.toLowerCase().includes(searchQuery.toLowerCase())
+      )
   );
 
-  // Get assignments for selected term
-  const termAssignments = classAssignments.filter((a) => a.term === selectedTerm);
-
-  // Group assignments by class
-  const assignmentsByClass = termAssignments.reduce(
-    (acc, assignment) => {
-      const key = assignment.classId;
-      if (!acc[key]) {
-        acc[key] = {
-          classId: assignment.classId,
-          className: assignment.className,
-          gradeLevel: assignment.gradeLevel,
-          assignments: [],
-        };
-      }
-      acc[key].assignments.push(assignment);
-      return acc;
-    },
-    {} as Record<string, { classId: string; className: string; gradeLevel: string; assignments: ClassAssignment[] }>
+  const filteredAvailable = availableTeachers.filter(
+    (teacher) =>
+      teacher.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      teacher.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      teacher.subjects.some((s) =>
+        s.toLowerCase().includes(searchQuery.toLowerCase())
+      )
   );
+
+  const handleAddTeacher = (teacherId: string) => {
+    setDepartmentMemberIds([...departmentMemberIds, teacherId]);
+  };
+
+  const handleRemoveTeacher = (teacherId: string) => {
+    setDepartmentMemberIds(departmentMemberIds.filter((id) => id !== teacherId));
+    if (selectedTeacher?.id === teacherId) {
+      setSelectedTeacher(null);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -209,160 +193,418 @@ export default function HODDepartmentManagement() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold">Department Management ({currentHOD.department})</h1>
-        <p className="text-muted-foreground text-sm">
-          Manage department members and class assignments
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">
+            Department Management ({currentDepartment})
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Manage your department members and monitor their performance
+          </p>
+        </div>
+        <Badge variant="secondary" className="text-sm">
+          {departmentMembers.length} Members
+        </Badge>
       </div>
 
-      {/* Two Tab Layout */}
-      <Tabs defaultValue="members">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="members">
-            <Users className="h-4 w-4 mr-2" />
-            Department Members
-          </TabsTrigger>
-          <TabsTrigger value="assignments">
-            <BookOpen className="h-4 w-4 mr-2" />
-            Class Assignments
-          </TabsTrigger>
-        </TabsList>
+      {/* Search Box */}
+      <div className="relative">
+        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search teachers by name, email, or subject..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10"
+        />
+      </div>
 
-        {/* Tab 1: Department Members */}
-        <TabsContent value="members" className="space-y-4">
-          {/* Search Box */}
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by name, email, or subject..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
-          {/* Teachers List */}
-          <div className="space-y-3">
-            {filteredTeachers.length === 0 ? (
-              <Card>
-                <CardContent className="pt-6 text-center text-muted-foreground">
-                  No teachers found matching your search
-                </CardContent>
-              </Card>
-            ) : (
-              filteredTeachers.map((teacher) => (
-                <Card key={teacher.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-base">{teacher.name}</CardTitle>
-                        <p className="text-xs text-muted-foreground mt-1">{teacher.email}</p>
-                      </div>
-                      <Badge variant={teacher.status === "Active" ? "default" : "secondary"}>
-                        {teacher.status}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-2">Subjects</p>
-                      <div className="flex flex-wrap gap-2">
-                        {teacher.subjects.map((subject) => (
-                          <Badge key={subject} variant="outline" className="text-xs">
-                            {subject}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="pt-2 border-t">
-                      <p className="text-xs text-muted-foreground">
-                        Joined in {teacher.joinYear}
-                      </p>
-                    </div>
-                    <div className="flex gap-2 pt-2">
-                      <Button size="sm" variant="outline" className="flex-1">
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Analysis
-                      </Button>
-                      <Button size="sm" variant="outline" className="flex-1">
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Remove
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
-        </TabsContent>
-
-        {/* Tab 2: Class Assignments */}
-        <TabsContent value="assignments" className="space-y-4">
-          {/* Term Selector */}
-          <Select value={selectedTerm} onValueChange={setSelectedTerm}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Term 1">Term 1</SelectItem>
-              <SelectItem value="Term 2">Term 2</SelectItem>
-              <SelectItem value="Term 3">Term 3</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Classes Grid */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
-            {Object.values(assignmentsByClass).map((classGroup) => (
-              <Card key={classGroup.classId} className="flex flex-col">
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-sm">{classGroup.className}</CardTitle>
-                      <p className="text-xs text-muted-foreground">{classGroup.gradeLevel}</p>
-                    </div>
-                    <Badge variant="secondary" className="text-xs">
-                      {classGroup.assignments.length}
-                    </Badge>
-                  </div>
-                </CardHeader>
-
-                {/* Expandable Content */}
-                {expandedClass === classGroup.classId && (
-                  <CardContent className="pb-2 space-y-2">
-                    {classGroup.assignments.map((assignment, idx) => (
-                      <div key={idx} className="text-xs border-t pt-2">
-                        <p className="font-medium">{assignment.subject}</p>
-                        <p className="text-muted-foreground text-xs">{assignment.teacherName}</p>
-                      </div>
-                    ))}
-                  </CardContent>
-                )}
-
-                {/* Toggle Button */}
-                <div className="mt-auto">
+      {/* Two Column Layout */}
+      <div className="flex gap-6">
+        {/* Left Column - Available Teachers (Collapsible) */}
+        <div
+          className={cn(
+            "transition-all duration-300",
+            isLeftColumnCollapsed ? "w-12" : "w-80"
+          )}
+        >
+          {isLeftColumnCollapsed ? (
+            <Button
+              variant="outline"
+              size="icon"
+              className="w-full h-12"
+              onClick={() => setIsLeftColumnCollapsed(false)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-semibold">
+                    Available Teachers
+                  </CardTitle>
                   <Button
-                    size="sm"
                     variant="ghost"
-                    className="w-full"
-                    onClick={() =>
-                      setExpandedClass(
-                        expandedClass === classGroup.classId ? null : classGroup.classId
-                      )
-                    }
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setIsLeftColumnCollapsed(true)}
                   >
-                    <ChevronDown
-                      className={`h-4 w-4 transition-transform ${
-                        expandedClass === classGroup.classId ? "rotate-180" : ""
-                      }`}
-                    />
+                    <ChevronLeft className="h-4 w-4" />
                   </Button>
                 </div>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
+                <p className="text-xs text-muted-foreground">
+                  Teachers who teach {currentDepartment} subjects
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {filteredAvailable.length === 0 ? (
+                  <p className="text-xs text-center text-muted-foreground py-4">
+                    No available teachers
+                  </p>
+                ) : (
+                  filteredAvailable.map((teacher) => (
+                    <Card
+                      key={teacher.id}
+                      className="p-3 hover:shadow-sm transition-shadow"
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              {teacher.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {teacher.email}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {teacher.subjects.map((subject) => (
+                            <Badge
+                              key={subject}
+                              variant="outline"
+                              className="text-[10px] px-1.5 py-0"
+                            >
+                              {subject}
+                            </Badge>
+                          ))}
+                        </div>
+                        <Button
+                          size="sm"
+                          className="w-full h-7 text-xs"
+                          onClick={() => handleAddTeacher(teacher.id)}
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Add to Department
+                        </Button>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Right Column - Department Members */}
+        <div className="flex-1">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-semibold">
+                Department Members
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Click on a member to view details and analytics
+              </p>
+            </CardHeader>
+            <CardContent>
+              {filteredMembers.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground text-sm">
+                  No department members found
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredMembers.map((teacher) => (
+                    <Card
+                      key={teacher.id}
+                      className="p-4 cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => {
+                        setSelectedTeacher(teacher);
+                        setCurrentView("overview");
+                      }}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold">{teacher.name}</h3>
+                            <Badge
+                              variant={
+                                teacher.status === "Active"
+                                  ? "default"
+                                  : "secondary"
+                              }
+                              className="text-xs"
+                            >
+                              {teacher.status}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground mb-2">
+                            {teacher.email}
+                          </p>
+                          <div className="flex flex-wrap gap-1.5 mb-2">
+                            {teacher.subjects.map((subject) => (
+                              <Badge
+                                key={subject}
+                                variant="outline"
+                                className="text-xs"
+                              >
+                                {subject}
+                              </Badge>
+                            ))}
+                          </div>
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                            <span>Joined {teacher.joinYear}</span>
+                            <span>{teacher.classes.length} Classes</span>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive hover:text-destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveTeacher(teacher.id);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Side Sheet for Teacher Details */}
+      <Sheet
+        open={selectedTeacher !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedTeacher(null);
+            setCurrentView("overview");
+          }
+        }}
+      >
+        <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
+          {selectedTeacher && (
+            <>
+              <SheetHeader>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <SheetTitle className="text-xl">
+                      {selectedTeacher.name}
+                    </SheetTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {selectedTeacher.email}
+                    </p>
+                  </div>
+                  <Badge
+                    variant={
+                      selectedTeacher.status === "Active"
+                        ? "default"
+                        : "secondary"
+                    }
+                  >
+                    {selectedTeacher.status}
+                  </Badge>
+                </div>
+              </SheetHeader>
+
+              <div className="mt-6 space-y-6">
+                {/* Teacher Info Summary */}
+                {currentView === "overview" && (
+                  <div className="space-y-4">
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm">
+                          Teacher Information
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-2">
+                            Subjects
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedTeacher.subjects.map((subject) => (
+                              <Badge key={subject} variant="outline">
+                                {subject}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-2">
+                            Classes
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedTeacher.classes.map((className) => (
+                              <Badge key={className} variant="secondary">
+                                {className}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="pt-2 border-t">
+                          <p className="text-xs text-muted-foreground">
+                            Joined in {selectedTeacher.joinYear}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Action Buttons */}
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold mb-3">
+                        View Teacher Analytics
+                      </p>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start"
+                        onClick={() => setCurrentView("attendance")}
+                      >
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Attendance Sheets
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start"
+                        onClick={() => setCurrentView("performance")}
+                      >
+                        <BarChart3 className="h-4 w-4 mr-2" />
+                        Performance Analysis
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start"
+                        onClick={() => setCurrentView("comparison")}
+                      >
+                        <ClipboardList className="h-4 w-4 mr-2" />
+                        Teacher Comparison
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start"
+                        onClick={() => setCurrentView("classLists")}
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        Class Lists
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Attendance View */}
+                {currentView === "attendance" && (
+                  <div className="space-y-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setCurrentView("overview")}
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Back
+                    </Button>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">
+                          Attendance Sheets
+                        </CardTitle>
+                        <p className="text-xs text-muted-foreground">
+                          Coming soon - View attendance records per session
+                        </p>
+                      </CardHeader>
+                    </Card>
+                  </div>
+                )}
+
+                {/* Performance View */}
+                {currentView === "performance" && (
+                  <div className="space-y-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setCurrentView("overview")}
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Back
+                    </Button>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">
+                          Performance Analysis
+                        </CardTitle>
+                        <p className="text-xs text-muted-foreground">
+                          Coming soon - View performance metrics per test
+                        </p>
+                      </CardHeader>
+                    </Card>
+                  </div>
+                )}
+
+                {/* Comparison View */}
+                {currentView === "comparison" && (
+                  <div className="space-y-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setCurrentView("overview")}
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Back
+                    </Button>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">
+                          Teacher Comparison
+                        </CardTitle>
+                        <p className="text-xs text-muted-foreground">
+                          Coming soon - Compare performance across classes
+                        </p>
+                      </CardHeader>
+                    </Card>
+                  </div>
+                )}
+
+                {/* Class Lists View */}
+                {currentView === "classLists" && (
+                  <div className="space-y-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setCurrentView("overview")}
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Back
+                    </Button>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Class Lists</CardTitle>
+                        <p className="text-xs text-muted-foreground">
+                          Coming soon - View student lists for all classes
+                        </p>
+                      </CardHeader>
+                    </Card>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
