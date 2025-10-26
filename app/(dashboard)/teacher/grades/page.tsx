@@ -534,12 +534,8 @@ export default function TeacherGradesPage() {
                       Mid-Term (/{MAX_SCORES.MID})
                     </th>
                     {/* EOT Columns */}
-                    <th colSpan={4} className="p-3 text-center font-semibold text-sm bg-purple-50 border-b border-r">
+                    <th colSpan={4} className="p-3 text-center font-semibold text-sm bg-purple-50 border-b">
                       End of Term (/{MAX_SCORES.EOT})
-                    </th>
-                    {/* Average Column */}
-                    <th className="p-3 text-center font-semibold text-sm bg-yellow-50 border-b w-[100px]">
-                      Average
                     </th>
                   </tr>
                   <tr>
@@ -560,9 +556,7 @@ export default function TeacherGradesPage() {
                     <th className="p-2 text-center text-xs font-medium bg-purple-50 border-b w-[100px]">Score</th>
                     <th className="p-2 text-center text-xs font-medium bg-purple-50 border-b w-[80px]">%</th>
                     <th className="p-2 text-center text-xs font-medium bg-purple-50 border-b w-[80px]">Status</th>
-                    <th className="p-2 text-center text-xs font-medium bg-purple-50 border-b border-r w-[60px]">Grade</th>
-                    {/* Average Sub-header */}
-                    <th className="p-2 text-center text-xs font-medium bg-yellow-50 border-b"></th>
+                    <th className="p-2 text-center text-xs font-medium bg-purple-50 border-b w-[60px]">Grade</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -743,31 +737,6 @@ export default function TeacherGradesPage() {
                           </Badge>
                         </td>
 
-                        {/* Average Cell */}
-                        <td className="p-2 text-center bg-yellow-50/50">
-                          {averagePercentage !== null ? (
-                            <div className="flex flex-col items-center">
-                              <span className="text-sm font-semibold">{averagePercentage}%</span>
-                              <Badge
-                                variant="outline"
-                                className={`text-xs mt-1 ${
-                                  calculateGrade(averagePercentage) === "A"
-                                    ? "bg-green-100 text-green-700 border-green-300"
-                                    : calculateGrade(averagePercentage) === "B"
-                                    ? "bg-blue-100 text-blue-700 border-blue-300"
-                                    : calculateGrade(averagePercentage) === "C"
-                                    ? "bg-yellow-100 text-yellow-700 border-yellow-300"
-                                    : calculateGrade(averagePercentage) === "D"
-                                    ? "bg-orange-100 text-orange-700 border-orange-300"
-                                    : "bg-red-100 text-red-700 border-red-300"
-                                }`}>
-                                {calculateGrade(averagePercentage)}
-                              </Badge>
-                            </div>
-                          ) : (
-                            <span className="text-sm text-muted-foreground">-</span>
-                          )}
-                        </td>
                       </tr>
                     );
                   })}

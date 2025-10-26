@@ -23,7 +23,9 @@
       "Bash(done)",
       "Bash(for f in performance schedule my-students reports settings)",
       "Bash(do echo \"=== $f ===\")",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
