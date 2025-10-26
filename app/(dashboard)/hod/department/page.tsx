@@ -398,112 +398,179 @@ export default function HODDepartmentManagement() {
           }
         }}
       >
-        <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
+        <SheetContent className="w-full sm:max-w-3xl overflow-y-auto p-0">
           {selectedTeacher && (
-            <>
-              <SheetHeader>
-                <div className="flex items-start justify-between">
+            <div className="flex flex-col h-full">
+              {/* Header Section with Gradient */}
+              <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background p-6 border-b">
+                <div className="flex items-start justify-between mb-4">
                   <div>
-                    <SheetTitle className="text-xl">
-                      {selectedTeacher.name}
-                    </SheetTitle>
+                    <h2 className="text-2xl font-bold">{selectedTeacher.name}</h2>
                     <p className="text-sm text-muted-foreground mt-1">
                       {selectedTeacher.email}
                     </p>
                   </div>
                   <Badge
-                    variant={
-                      selectedTeacher.status === "Active"
-                        ? "default"
-                        : "secondary"
-                    }
+                    variant={selectedTeacher.status === "Active" ? "default" : "secondary"}
+                    className="text-sm px-3 py-1"
                   >
                     {selectedTeacher.status}
                   </Badge>
                 </div>
-              </SheetHeader>
 
-              <div className="mt-6 space-y-6">
-                {/* Teacher Info Summary */}
+                {/* Quick Stats */}
+                <div className="grid grid-cols-3 gap-4 mt-4">
+                  <div className="bg-background/50 backdrop-blur-sm rounded-lg p-3 border">
+                    <p className="text-xs text-muted-foreground mb-1">Subjects</p>
+                    <p className="text-xl font-bold">{selectedTeacher.subjects.length}</p>
+                  </div>
+                  <div className="bg-background/50 backdrop-blur-sm rounded-lg p-3 border">
+                    <p className="text-xs text-muted-foreground mb-1">Classes</p>
+                    <p className="text-xl font-bold">{selectedTeacher.classes.length}</p>
+                  </div>
+                  <div className="bg-background/50 backdrop-blur-sm rounded-lg p-3 border">
+                    <p className="text-xs text-muted-foreground mb-1">Years</p>
+                    <p className="text-xl font-bold">
+                      {new Date().getFullYear() - selectedTeacher.joinYear}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Content Section */}
+              <div className="flex-1 p-6">
                 {currentView === "overview" && (
-                  <div className="space-y-4">
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-sm">
-                          Teacher Information
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-2">
-                            Subjects
-                          </p>
+                  <div className="space-y-6">
+                    {/* Subjects and Classes Info */}
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                            <FileText className="h-4 w-4" />
+                            Teaching Subjects
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
                           <div className="flex flex-wrap gap-2">
                             {selectedTeacher.subjects.map((subject) => (
-                              <Badge key={subject} variant="outline">
+                              <Badge key={subject} variant="outline" className="text-sm">
                                 {subject}
                               </Badge>
                             ))}
                           </div>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-2">
-                            Classes
-                          </p>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                            <Users className="h-4 w-4" />
+                            Assigned Classes
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
                           <div className="flex flex-wrap gap-2">
                             {selectedTeacher.classes.map((className) => (
-                              <Badge key={className} variant="secondary">
+                              <Badge key={className} variant="secondary" className="text-sm">
                                 {className}
                               </Badge>
                             ))}
                           </div>
-                        </div>
-                        <div className="pt-2 border-t">
-                          <p className="text-xs text-muted-foreground">
-                            Joined in {selectedTeacher.joinYear}
-                          </p>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Analytics Actions Grid */}
+                    <div>
+                      <h3 className="text-sm font-semibold mb-4">Teacher Analytics & Reports</h3>
+                      <div className="grid md:grid-cols-2 gap-3">
+                        <Card
+                          className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border-2 hover:border-primary/50"
+                          onClick={() => setCurrentView("attendance")}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-3">
+                              <div className="p-2 rounded-lg bg-blue-500/10">
+                                <Calendar className="h-5 w-5 text-blue-600" />
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="font-semibold mb-1">Attendance Sheets</h4>
+                                <p className="text-xs text-muted-foreground">
+                                  View attendance records per session for all subjects
+                                </p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        <Card
+                          className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border-2 hover:border-primary/50"
+                          onClick={() => setCurrentView("performance")}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-3">
+                              <div className="p-2 rounded-lg bg-green-500/10">
+                                <BarChart3 className="h-5 w-5 text-green-600" />
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="font-semibold mb-1">Performance Analysis</h4>
+                                <p className="text-xs text-muted-foreground">
+                                  Analysis sheet per test with detailed metrics
+                                </p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        <Card
+                          className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border-2 hover:border-primary/50"
+                          onClick={() => setCurrentView("comparison")}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-3">
+                              <div className="p-2 rounded-lg bg-purple-500/10">
+                                <ClipboardList className="h-5 w-5 text-purple-600" />
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="font-semibold mb-1">Teacher Comparison</h4>
+                                <p className="text-xs text-muted-foreground">
+                                  Comparative analysis across all classes taught
+                                </p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        <Card
+                          className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border-2 hover:border-primary/50"
+                          onClick={() => setCurrentView("classLists")}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-3">
+                              <div className="p-2 rounded-lg bg-orange-500/10">
+                                <UserCheck className="h-5 w-5 text-orange-600" />
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="font-semibold mb-1">Class Lists</h4>
+                                <p className="text-xs text-muted-foreground">
+                                  Complete student lists for all assigned classes
+                                </p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </div>
+
+                    {/* Additional Info */}
+                    <Card className="bg-muted/50">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Calendar className="h-4 w-4" />
+                          <span>Member of {currentDepartment} Department since {selectedTeacher.joinYear}</span>
                         </div>
                       </CardContent>
                     </Card>
-
-                    {/* Action Buttons */}
-                    <div className="space-y-2">
-                      <p className="text-sm font-semibold mb-3">
-                        View Teacher Analytics
-                      </p>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start"
-                        onClick={() => setCurrentView("attendance")}
-                      >
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Attendance Sheets
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start"
-                        onClick={() => setCurrentView("performance")}
-                      >
-                        <BarChart3 className="h-4 w-4 mr-2" />
-                        Performance Analysis
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start"
-                        onClick={() => setCurrentView("comparison")}
-                      >
-                        <ClipboardList className="h-4 w-4 mr-2" />
-                        Teacher Comparison
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start"
-                        onClick={() => setCurrentView("classLists")}
-                      >
-                        <Users className="h-4 w-4 mr-2" />
-                        Class Lists
-                      </Button>
-                    </div>
                   </div>
                 )}
 
@@ -514,16 +581,18 @@ export default function HODDepartmentManagement() {
                       variant="ghost"
                       size="sm"
                       onClick={() => setCurrentView("overview")}
+                      className="mb-2"
                     >
                       <ChevronLeft className="h-4 w-4 mr-1" />
-                      Back
+                      Back to Overview
                     </Button>
                     <Card>
                       <CardHeader>
-                        <CardTitle className="text-base">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Calendar className="h-5 w-5" />
                           Attendance Sheets
                         </CardTitle>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-sm text-muted-foreground">
                           Coming soon - View attendance records per session
                         </p>
                       </CardHeader>
@@ -538,16 +607,18 @@ export default function HODDepartmentManagement() {
                       variant="ghost"
                       size="sm"
                       onClick={() => setCurrentView("overview")}
+                      className="mb-2"
                     >
                       <ChevronLeft className="h-4 w-4 mr-1" />
-                      Back
+                      Back to Overview
                     </Button>
                     <Card>
                       <CardHeader>
-                        <CardTitle className="text-base">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <BarChart3 className="h-5 w-5" />
                           Performance Analysis
                         </CardTitle>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-sm text-muted-foreground">
                           Coming soon - View performance metrics per test
                         </p>
                       </CardHeader>
@@ -562,16 +633,18 @@ export default function HODDepartmentManagement() {
                       variant="ghost"
                       size="sm"
                       onClick={() => setCurrentView("overview")}
+                      className="mb-2"
                     >
                       <ChevronLeft className="h-4 w-4 mr-1" />
-                      Back
+                      Back to Overview
                     </Button>
                     <Card>
                       <CardHeader>
-                        <CardTitle className="text-base">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <ClipboardList className="h-5 w-5" />
                           Teacher Comparison
                         </CardTitle>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-sm text-muted-foreground">
                           Coming soon - Compare performance across classes
                         </p>
                       </CardHeader>
@@ -586,14 +659,18 @@ export default function HODDepartmentManagement() {
                       variant="ghost"
                       size="sm"
                       onClick={() => setCurrentView("overview")}
+                      className="mb-2"
                     >
                       <ChevronLeft className="h-4 w-4 mr-1" />
-                      Back
+                      Back to Overview
                     </Button>
                     <Card>
                       <CardHeader>
-                        <CardTitle className="text-base">Class Lists</CardTitle>
-                        <p className="text-xs text-muted-foreground">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Users className="h-5 w-5" />
+                          Class Lists
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground">
                           Coming soon - View student lists for all classes
                         </p>
                       </CardHeader>
@@ -601,7 +678,7 @@ export default function HODDepartmentManagement() {
                   </div>
                 )}
               </div>
-            </>
+            </div>
           )}
         </SheetContent>
       </Sheet>
