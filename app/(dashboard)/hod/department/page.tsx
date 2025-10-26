@@ -387,15 +387,7 @@ export default function HODDepartmentManagement() {
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-semibold text-sm truncate">{teacher.name}</h3>
-                              <Badge
-                                variant={teacher.status === "Active" ? "default" : "secondary"}
-                                className="text-[10px] px-1.5 py-0"
-                              >
-                                {teacher.status}
-                              </Badge>
-                            </div>
+                            <h3 className="font-semibold text-sm truncate">{teacher.name}</h3>
                             <div className="flex items-center gap-3 mt-1">
                               <p className="text-xs text-muted-foreground truncate">
                                 {teacher.subjects.join(", ")}
@@ -407,17 +399,25 @@ export default function HODDepartmentManagement() {
                             </div>
                           </div>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-destructive hover:text-destructive h-8 w-8 p-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveTeacher(teacher.id);
-                          }}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                        <div className="flex flex-col items-end gap-1">
+                          <Badge
+                            variant={teacher.status === "Active" ? "default" : "secondary"}
+                            className="text-[10px] px-1.5 py-0"
+                          >
+                            {teacher.status}
+                          </Badge>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive h-6 w-6 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveTeacher(teacher.id);
+                            }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       </div>
                     </Card>
                   ))}
@@ -815,37 +815,42 @@ export default function HODDepartmentManagement() {
                                 </label>
                                 <Card className="p-2 max-h-56 overflow-y-auto">
                                   <div className="space-y-1">
-                                    {availableClasses.map((className) => (
-                                      <div
-                                        key={className}
-                                        className={cn(
-                                          "flex items-center space-x-2 p-2 rounded-md hover:bg-accent transition-colors cursor-pointer",
-                                          classSubjectPairs[className] && "bg-accent"
-                                        )}
-                                        onClick={() => {
-                                          if (!classSubjectPairs[className]) {
-                                            // Add class with empty subject
-                                            setClassSubjectPairs({ ...classSubjectPairs, [className]: "" });
-                                          } else {
-                                            // Remove class
-                                            const newPairs = { ...classSubjectPairs };
-                                            delete newPairs[className];
-                                            setClassSubjectPairs(newPairs);
-                                          }
-                                        }}
-                                      >
-                                        <Checkbox
-                                          checked={!!classSubjectPairs[className]}
-                                          className="pointer-events-none"
-                                        />
-                                        <span className="text-sm flex-1">{className}</span>
-                                        {selectedTeacher.classes.includes(className) && (
-                                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                            Assigned
-                                          </Badge>
-                                        )}
-                                      </div>
-                                    ))}
+                                    {availableClasses
+                                      .filter(className => !selectedTeacher.classes.includes(className))
+                                      .length === 0 ? (
+                                        <p className="text-xs text-center text-muted-foreground py-6">
+                                          All classes have been assigned
+                                        </p>
+                                      ) : (
+                                        availableClasses
+                                          .filter(className => !selectedTeacher.classes.includes(className))
+                                          .map((className) => (
+                                            <div
+                                              key={className}
+                                              className={cn(
+                                                "flex items-center space-x-2 p-2 rounded-md hover:bg-accent transition-colors cursor-pointer",
+                                                classSubjectPairs[className] && "bg-accent"
+                                              )}
+                                              onClick={() => {
+                                                if (!classSubjectPairs[className]) {
+                                                  // Add class with empty subject
+                                                  setClassSubjectPairs({ ...classSubjectPairs, [className]: "" });
+                                                } else {
+                                                  // Remove class
+                                                  const newPairs = { ...classSubjectPairs };
+                                                  delete newPairs[className];
+                                                  setClassSubjectPairs(newPairs);
+                                                }
+                                              }}
+                                            >
+                                              <Checkbox
+                                                checked={!!classSubjectPairs[className]}
+                                                onCheckedChange={() => {}} // Empty handler, click handled by parent div
+                                              />
+                                              <span className="text-sm flex-1">{className}</span>
+                                            </div>
+                                          ))
+                                      )}
                                   </div>
                                 </Card>
                               </div>
@@ -877,7 +882,7 @@ export default function HODDepartmentManagement() {
                                       >
                                         <Checkbox
                                           checked={Object.values(classSubjectPairs).includes(subject)}
-                                          className="pointer-events-none"
+                                          onCheckedChange={() => {}} // Empty handler, click handled by parent div
                                         />
                                         <span className="text-sm flex-1">{subject}</span>
                                       </div>
