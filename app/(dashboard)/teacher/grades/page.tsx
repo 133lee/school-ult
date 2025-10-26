@@ -526,15 +526,15 @@ export default function TeacherGradesPage() {
                       Gender
                     </th>
                     {/* CAT1 Columns */}
-                    <th colSpan={3} className="p-3 text-center font-semibold text-sm bg-green-50 border-b border-r">
+                    <th colSpan={4} className="p-3 text-center font-semibold text-sm bg-green-50 border-b border-r">
                       CAT 1 (/{MAX_SCORES.CAT1})
                     </th>
                     {/* MID Columns */}
-                    <th colSpan={3} className="p-3 text-center font-semibold text-sm bg-blue-50 border-b border-r">
+                    <th colSpan={4} className="p-3 text-center font-semibold text-sm bg-blue-50 border-b border-r">
                       Mid-Term (/{MAX_SCORES.MID})
                     </th>
                     {/* EOT Columns */}
-                    <th colSpan={3} className="p-3 text-center font-semibold text-sm bg-purple-50 border-b border-r">
+                    <th colSpan={4} className="p-3 text-center font-semibold text-sm bg-purple-50 border-b border-r">
                       End of Term (/{MAX_SCORES.EOT})
                     </th>
                     {/* Average Column */}
@@ -549,14 +549,17 @@ export default function TeacherGradesPage() {
                     {/* CAT1 Sub-headers */}
                     <th className="p-2 text-center text-xs font-medium bg-green-50 border-b w-[100px]">Score</th>
                     <th className="p-2 text-center text-xs font-medium bg-green-50 border-b w-[80px]">%</th>
+                    <th className="p-2 text-center text-xs font-medium bg-green-50 border-b w-[80px]">Status</th>
                     <th className="p-2 text-center text-xs font-medium bg-green-50 border-b border-r w-[60px]">Grade</th>
                     {/* MID Sub-headers */}
                     <th className="p-2 text-center text-xs font-medium bg-blue-50 border-b w-[100px]">Score</th>
                     <th className="p-2 text-center text-xs font-medium bg-blue-50 border-b w-[80px]">%</th>
+                    <th className="p-2 text-center text-xs font-medium bg-blue-50 border-b w-[80px]">Status</th>
                     <th className="p-2 text-center text-xs font-medium bg-blue-50 border-b border-r w-[60px]">Grade</th>
                     {/* EOT Sub-headers */}
                     <th className="p-2 text-center text-xs font-medium bg-purple-50 border-b w-[100px]">Score</th>
                     <th className="p-2 text-center text-xs font-medium bg-purple-50 border-b w-[80px]">%</th>
+                    <th className="p-2 text-center text-xs font-medium bg-purple-50 border-b w-[80px]">Status</th>
                     <th className="p-2 text-center text-xs font-medium bg-purple-50 border-b border-r w-[60px]">Grade</th>
                     {/* Average Sub-header */}
                     <th className="p-2 text-center text-xs font-medium bg-yellow-50 border-b"></th>
@@ -772,22 +775,22 @@ export default function TeacherGradesPage() {
                 {/* Summary Footer */}
                 <tfoot className="sticky bottom-0 bg-background border-t-2">
                   <tr className="font-semibold">
-                    <td colSpan={3} className="p-3 text-right border-r">
+                    <td colSpan={4} className="p-3 text-right border-r">
                       Class Average:
                     </td>
-                    <td colSpan={3} className="p-3 text-center bg-green-50 border-r">
+                    <td colSpan={4} className="p-3 text-center bg-green-50 border-r">
                       {(() => {
                         const scores = students.map(s => grades[s.id].CAT1.percentage).filter(p => p !== null) as number[];
                         return scores.length > 0 ? `${Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)}%` : "-";
                       })()}
                     </td>
-                    <td colSpan={3} className="p-3 text-center bg-blue-50 border-r">
+                    <td colSpan={4} className="p-3 text-center bg-blue-50 border-r">
                       {(() => {
                         const scores = students.map(s => grades[s.id].MID.percentage).filter(p => p !== null) as number[];
                         return scores.length > 0 ? `${Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)}%` : "-";
                       })()}
                     </td>
-                    <td colSpan={3} className="p-3 text-center bg-purple-50 border-r">
+                    <td colSpan={4} className="p-3 text-center bg-purple-50 border-r">
                       {(() => {
                         const scores = students.map(s => grades[s.id].EOT.percentage).filter(p => p !== null) as number[];
                         return scores.length > 0 ? `${Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)}%` : "-";

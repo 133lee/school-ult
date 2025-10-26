@@ -540,15 +540,15 @@ export default function HODGradesPage() {
                       Gender
                     </th>
                     {/* CAT1 Columns */}
-                    <th colSpan={3} className="p-3 text-center font-semibold text-sm bg-green-50 border-b border-r">
+                    <th colSpan={4} className="p-3 text-center font-semibold text-sm bg-green-50 border-b border-r">
                       CAT 1 (/{MAX_SCORES.CAT1})
                     </th>
                     {/* MID Columns */}
-                    <th colSpan={3} className="p-3 text-center font-semibold text-sm bg-blue-50 border-b border-r">
+                    <th colSpan={4} className="p-3 text-center font-semibold text-sm bg-blue-50 border-b border-r">
                       Mid-Term (/{MAX_SCORES.MID})
                     </th>
                     {/* EOT Columns */}
-                    <th colSpan={3} className="p-3 text-center font-semibold text-sm bg-purple-50 border-b border-r">
+                    <th colSpan={4} className="p-3 text-center font-semibold text-sm bg-purple-50 border-b border-r">
                       End of Term (/{MAX_SCORES.EOT})
                     </th>
                     {/* Average Column */}
@@ -563,14 +563,17 @@ export default function HODGradesPage() {
                     {/* CAT1 Sub-headers */}
                     <th className="p-2 text-center text-xs font-medium bg-green-50 border-b w-[100px]">Score</th>
                     <th className="p-2 text-center text-xs font-medium bg-green-50 border-b w-[80px]">%</th>
+                    <th className="p-2 text-center text-xs font-medium bg-green-50 border-b w-[80px]">Status</th>
                     <th className="p-2 text-center text-xs font-medium bg-green-50 border-b border-r w-[60px]">Grade</th>
                     {/* MID Sub-headers */}
                     <th className="p-2 text-center text-xs font-medium bg-blue-50 border-b w-[100px]">Score</th>
                     <th className="p-2 text-center text-xs font-medium bg-blue-50 border-b w-[80px]">%</th>
+                    <th className="p-2 text-center text-xs font-medium bg-blue-50 border-b w-[80px]">Status</th>
                     <th className="p-2 text-center text-xs font-medium bg-blue-50 border-b border-r w-[60px]">Grade</th>
                     {/* EOT Sub-headers */}
                     <th className="p-2 text-center text-xs font-medium bg-purple-50 border-b w-[100px]">Score</th>
                     <th className="p-2 text-center text-xs font-medium bg-purple-50 border-b w-[80px]">%</th>
+                    <th className="p-2 text-center text-xs font-medium bg-purple-50 border-b w-[80px]">Status</th>
                     <th className="p-2 text-center text-xs font-medium bg-purple-50 border-b border-r w-[60px]">Grade</th>
                     {/* Average Sub-header */}
                     <th className="p-2 text-center text-xs font-medium bg-yellow-50 border-b"></th>
@@ -644,11 +647,41 @@ export default function HODGradesPage() {
                         <td className="p-2 text-center text-sm bg-green-50/50">
                           {cat1Data.percentage !== null ? `${cat1Data.percentage}%` : "-"}
                         </td>
+                        <td className="p-2 bg-green-50/50">
+                          <div className="flex items-center justify-center gap-1">
+                            <Button
+                              size="sm"
+                              variant={cat1Data.status === "absent" ? "default" : "outline"}
+                              className={cn(
+                                "h-7 px-1.5 text-xs font-semibold",
+                                cat1Data.status === "absent" && "bg-red-600 hover:bg-red-700"
+                              )}
+                              disabled={cat1Data.score !== null && cat1Data.status !== "absent"}
+                              onClick={() => handleStatusChange(student.id, "CAT1", cat1Data.status === "absent" ? null : "absent")}>
+                              AB
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={cat1Data.status === "excused" ? "default" : "outline"}
+                              className={cn(
+                                "h-7 px-1.5 text-xs font-semibold",
+                                cat1Data.status === "excused" && "bg-blue-600 hover:bg-blue-700"
+                              )}
+                              disabled={cat1Data.score !== null && cat1Data.status !== "excused"}
+                              onClick={() => handleStatusChange(student.id, "CAT1", cat1Data.status === "excused" ? null : "excused")}>
+                              EX
+                            </Button>
+                          </div>
+                        </td>
                         <td className="p-2 text-center border-r bg-green-50/50">
                           <Badge
                             variant="outline"
                             className={`text-xs ${
-                              cat1Data.grade === "A"
+                              cat1Data.status === "absent"
+                                ? "bg-red-100 text-red-700 border-red-300"
+                                : cat1Data.status === "excused"
+                                ? "bg-blue-100 text-blue-700 border-blue-300"
+                                : cat1Data.grade === "A"
                                 ? "bg-green-100 text-green-700 border-green-300"
                                 : cat1Data.grade === "B"
                                 ? "bg-blue-100 text-blue-700 border-blue-300"
@@ -660,7 +693,7 @@ export default function HODGradesPage() {
                                 ? "bg-red-100 text-red-700 border-red-300"
                                 : "bg-gray-100 text-gray-600 border-gray-300"
                             }`}>
-                            {cat1Data.grade}
+                            {cat1Data.status === "absent" ? "AB" : cat1Data.status === "excused" ? "EX" : cat1Data.grade}
                           </Badge>
                         </td>
 
@@ -689,11 +722,41 @@ export default function HODGradesPage() {
                         <td className="p-2 text-center text-sm bg-blue-50/50">
                           {midData.percentage !== null ? `${midData.percentage}%` : "-"}
                         </td>
+                        <td className="p-2 bg-blue-50/50">
+                          <div className="flex items-center justify-center gap-1">
+                            <Button
+                              size="sm"
+                              variant={midData.status === "absent" ? "default" : "outline"}
+                              className={cn(
+                                "h-7 px-1.5 text-xs font-semibold",
+                                midData.status === "absent" && "bg-red-600 hover:bg-red-700"
+                              )}
+                              disabled={midData.score !== null && midData.status !== "absent"}
+                              onClick={() => handleStatusChange(student.id, "MID", midData.status === "absent" ? null : "absent")}>
+                              AB
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={midData.status === "excused" ? "default" : "outline"}
+                              className={cn(
+                                "h-7 px-1.5 text-xs font-semibold",
+                                midData.status === "excused" && "bg-blue-600 hover:bg-blue-700"
+                              )}
+                              disabled={midData.score !== null && midData.status !== "excused"}
+                              onClick={() => handleStatusChange(student.id, "MID", midData.status === "excused" ? null : "excused")}>
+                              EX
+                            </Button>
+                          </div>
+                        </td>
                         <td className="p-2 text-center border-r bg-blue-50/50">
                           <Badge
                             variant="outline"
                             className={`text-xs ${
-                              midData.grade === "A"
+                              midData.status === "absent"
+                                ? "bg-red-100 text-red-700 border-red-300"
+                                : midData.status === "excused"
+                                ? "bg-blue-100 text-blue-700 border-blue-300"
+                                : midData.grade === "A"
                                 ? "bg-green-100 text-green-700 border-green-300"
                                 : midData.grade === "B"
                                 ? "bg-blue-100 text-blue-700 border-blue-300"
@@ -705,7 +768,7 @@ export default function HODGradesPage() {
                                 ? "bg-red-100 text-red-700 border-red-300"
                                 : "bg-gray-100 text-gray-600 border-gray-300"
                             }`}>
-                            {midData.grade}
+                            {midData.status === "absent" ? "AB" : midData.status === "excused" ? "EX" : midData.grade}
                           </Badge>
                         </td>
 
@@ -734,11 +797,41 @@ export default function HODGradesPage() {
                         <td className="p-2 text-center text-sm bg-purple-50/50">
                           {eotData.percentage !== null ? `${eotData.percentage}%` : "-"}
                         </td>
+                        <td className="p-2 bg-purple-50/50">
+                          <div className="flex items-center justify-center gap-1">
+                            <Button
+                              size="sm"
+                              variant={eotData.status === "absent" ? "default" : "outline"}
+                              className={cn(
+                                "h-7 px-1.5 text-xs font-semibold",
+                                eotData.status === "absent" && "bg-red-600 hover:bg-red-700"
+                              )}
+                              disabled={eotData.score !== null && eotData.status !== "absent"}
+                              onClick={() => handleStatusChange(student.id, "EOT", eotData.status === "absent" ? null : "absent")}>
+                              AB
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={eotData.status === "excused" ? "default" : "outline"}
+                              className={cn(
+                                "h-7 px-1.5 text-xs font-semibold",
+                                eotData.status === "excused" && "bg-blue-600 hover:bg-blue-700"
+                              )}
+                              disabled={eotData.score !== null && eotData.status !== "excused"}
+                              onClick={() => handleStatusChange(student.id, "EOT", eotData.status === "excused" ? null : "excused")}>
+                              EX
+                            </Button>
+                          </div>
+                        </td>
                         <td className="p-2 text-center border-r bg-purple-50/50">
                           <Badge
                             variant="outline"
                             className={`text-xs ${
-                              eotData.grade === "A"
+                              eotData.status === "absent"
+                                ? "bg-red-100 text-red-700 border-red-300"
+                                : eotData.status === "excused"
+                                ? "bg-blue-100 text-blue-700 border-blue-300"
+                                : eotData.grade === "A"
                                 ? "bg-green-100 text-green-700 border-green-300"
                                 : eotData.grade === "B"
                                 ? "bg-blue-100 text-blue-700 border-blue-300"
@@ -750,7 +843,7 @@ export default function HODGradesPage() {
                                 ? "bg-red-100 text-red-700 border-red-300"
                                 : "bg-gray-100 text-gray-600 border-gray-300"
                             }`}>
-                            {eotData.grade}
+                            {eotData.status === "absent" ? "AB" : eotData.status === "excused" ? "EX" : eotData.grade}
                           </Badge>
                         </td>
 
