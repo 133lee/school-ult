@@ -472,23 +472,23 @@ export default function HODGradesPage() {
                                 size="sm"
                                 variant={gradeData.status === "absent" ? "default" : "outline"}
                                 className={cn(
-                                  "h-8 w-8 p-0",
+                                  "h-8 px-2 text-xs font-semibold",
                                   gradeData.status === "absent" && "bg-red-600 hover:bg-red-700"
                                 )}
                                 disabled={gradeData.score !== null && gradeData.status !== "absent"}
                                 onClick={() => handleStatusChange(student.id, assessmentType, gradeData.status === "absent" ? null : "absent")}>
-                                <X className="h-4 w-4" />
+                                AB
                               </Button>
                               <Button
                                 size="sm"
                                 variant={gradeData.status === "excused" ? "default" : "outline"}
                                 className={cn(
-                                  "h-8 w-8 p-0",
+                                  "h-8 px-2 text-xs font-semibold",
                                   gradeData.status === "excused" && "bg-blue-600 hover:bg-blue-700"
                                 )}
                                 disabled={gradeData.score !== null && gradeData.status !== "excused"}
                                 onClick={() => handleStatusChange(student.id, assessmentType, gradeData.status === "excused" ? null : "excused")}>
-                                <AlertCircle className="h-4 w-4" />
+                                EX
                               </Button>
                             </div>
                           </td>
@@ -496,7 +496,11 @@ export default function HODGradesPage() {
                             <Badge
                               variant="outline"
                               className={`${
-                                gradeData.grade === "A"
+                                gradeData.status === "absent"
+                                  ? "bg-red-50 text-red-700 border-red-200"
+                                  : gradeData.status === "excused"
+                                  ? "bg-blue-50 text-blue-700 border-blue-200"
+                                  : gradeData.grade === "A"
                                   ? "bg-green-50 text-green-700 border-green-200"
                                   : gradeData.grade === "B"
                                   ? "bg-blue-50 text-blue-700 border-blue-200"
@@ -508,7 +512,7 @@ export default function HODGradesPage() {
                                   ? "bg-red-50 text-red-700 border-red-200"
                                   : "bg-gray-50 text-gray-600 border-gray-200"
                               }`}>
-                              {gradeData.grade}
+                              {gradeData.status === "absent" ? "AB" : gradeData.status === "excused" ? "EX" : gradeData.grade}
                             </Badge>
                           </td>
                         </tr>
