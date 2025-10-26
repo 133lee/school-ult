@@ -17,6 +17,7 @@ import {
   UserCheck,
   X,
   Calendar,
+  BookOpen,
 } from "lucide-react";
 import { useHODAuth } from "@/hooks/useHODAuth";
 import { Badge } from "@/components/ui/badge";
@@ -38,7 +39,7 @@ interface Teacher {
   classes: string[];
 }
 
-type ViewType = "overview" | "attendance" | "performance" | "comparison" | "classLists";
+type ViewType = "overview" | "attendance" | "performance" | "comparison" | "classLists" | "assignments";
 
 export default function HODDepartmentManagement() {
   const { currentHOD, isLoading } = useHODAuth();
@@ -323,60 +324,49 @@ export default function HODDepartmentManagement() {
                   No department members found
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {filteredMembers.map((teacher) => (
                     <Card
                       key={teacher.id}
-                      className="p-4 cursor-pointer hover:shadow-md transition-shadow"
+                      className="p-3 cursor-pointer hover:shadow-md transition-shadow"
                       onClick={() => {
                         setSelectedTeacher(teacher);
                         setCurrentView("overview");
                       }}
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold">{teacher.name}</h3>
-                            <Badge
-                              variant={
-                                teacher.status === "Active"
-                                  ? "default"
-                                  : "secondary"
-                              }
-                              className="text-xs"
-                            >
-                              {teacher.status}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground mb-2">
-                            {teacher.email}
-                          </p>
-                          <div className="flex flex-wrap gap-1.5 mb-2">
-                            {teacher.subjects.map((subject) => (
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-semibold text-sm truncate">{teacher.name}</h3>
                               <Badge
-                                key={subject}
-                                variant="outline"
-                                className="text-xs"
+                                variant={teacher.status === "Active" ? "default" : "secondary"}
+                                className="text-[10px] px-1.5 py-0"
                               >
-                                {subject}
+                                {teacher.status}
                               </Badge>
-                            ))}
-                          </div>
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                            <span>Joined {teacher.joinYear}</span>
-                            <span>{teacher.classes.length} Classes</span>
+                            </div>
+                            <div className="flex items-center gap-3 mt-1">
+                              <p className="text-xs text-muted-foreground truncate">
+                                {teacher.subjects.join(", ")}
+                              </p>
+                              <span className="text-xs text-muted-foreground">•</span>
+                              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                {teacher.classes.length} Classes
+                              </span>
+                            </div>
                           </div>
                         </div>
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="text-destructive hover:text-destructive"
+                          className="text-destructive hover:text-destructive h-8 w-8 p-0"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleRemoveTeacher(teacher.id);
                           }}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     </Card>
@@ -475,6 +465,29 @@ export default function HODDepartmentManagement() {
                                 {className}
                               </Badge>
                             ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Management Actions */}
+                    <div>
+                      <h3 className="text-sm font-semibold mb-4">Teacher Management</h3>
+                      <Card
+                        className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border-2 hover:border-primary/50 mb-4"
+                        onClick={() => setCurrentView("assignments")}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 rounded-lg bg-indigo-500/10">
+                              <BookOpen className="h-5 w-5 text-indigo-600" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-semibold mb-1">Class Assignments</h4>
+                              <p className="text-xs text-muted-foreground">
+                                Assign or update classes for this teacher
+                              </p>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -674,6 +687,109 @@ export default function HODDepartmentManagement() {
                           Coming soon - View student lists for all classes
                         </p>
                       </CardHeader>
+                    </Card>
+                  </div>
+                )}
+
+                {/* Class Assignments View */}
+                {currentView === "assignments" && selectedTeacher && (
+                  <div className="space-y-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setCurrentView("overview")}
+                      className="mb-2"
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Back to Overview
+                    </Button>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <BookOpen className="h-5 w-5" />
+                          Class Assignments
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Manage class assignments for {selectedTeacher.name}
+                        </p>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {/* Current Assignments */}
+                        <div>
+                          <h4 className="text-sm font-semibold mb-3">Current Assignments</h4>
+                          {selectedTeacher.classes.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">
+                              No classes assigned yet
+                            </p>
+                          ) : (
+                            <div className="space-y-2">
+                              {selectedTeacher.classes.map((className) => (
+                                <Card key={className} className="p-3">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <div className="p-2 rounded-lg bg-primary/10">
+                                        <BookOpen className="h-4 w-4" />
+                                      </div>
+                                      <div>
+                                        <p className="font-medium text-sm">{className}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {selectedTeacher.subjects.join(", ")}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="text-destructive hover:text-destructive"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </Card>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Add New Assignment */}
+                        <div className="pt-4 border-t">
+                          <h4 className="text-sm font-semibold mb-3">Assign New Class</h4>
+                          <div className="space-y-3">
+                            <div>
+                              <label className="text-xs text-muted-foreground mb-1.5 block">
+                                Select Class
+                              </label>
+                              <select className="w-full p-2 border rounded-md text-sm">
+                                <option value="">Choose a class...</option>
+                                <option value="Grade 9A">Grade 9A</option>
+                                <option value="Grade 9B">Grade 9B</option>
+                                <option value="Grade 10A">Grade 10A</option>
+                                <option value="Grade 10B">Grade 10B</option>
+                                <option value="Grade 11A">Grade 11A</option>
+                                <option value="Grade 11B">Grade 11B</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="text-xs text-muted-foreground mb-1.5 block">
+                                Select Subject
+                              </label>
+                              <select className="w-full p-2 border rounded-md text-sm">
+                                <option value="">Choose a subject...</option>
+                                {selectedTeacher.subjects.map((subject) => (
+                                  <option key={subject} value={subject}>
+                                    {subject}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <Button className="w-full" size="sm">
+                              <Plus className="h-4 w-4 mr-2" />
+                              Assign Class
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
                     </Card>
                   </div>
                 )}
