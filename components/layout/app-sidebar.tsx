@@ -28,7 +28,6 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "../ui/sidebar";
-import {NavFooter} from "@/components/nav-footer";
 import {NavUser} from "@/components/layout/nav-user";
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {

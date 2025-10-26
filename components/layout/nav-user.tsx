@@ -6,7 +6,6 @@ import {
   LogOut,
   Bell,
   UserCircle,
-  Settings,
   ChevronUp,
 } from "lucide-react"
 
@@ -30,7 +29,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { Badge } from "@/components/ui/badge"
 
 export function NavUser({
   user,
@@ -60,14 +58,7 @@ export function NavUser({
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <div className="flex items-center gap-2">
-                  <span className="truncate font-semibold">{user.name}</span>
-                  {user.role && (
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
-                      {user.role}
-                    </Badge>
-                  )}
-                </div>
+                <span className="truncate font-semibold">{user.name}</span>
                 <span className="text-muted-foreground truncate text-xs">
                   {user.email}
                 </span>
@@ -94,11 +85,6 @@ export function NavUser({
                   <span className="text-muted-foreground truncate text-xs">
                     {user.email}
                   </span>
-                  {user.role && (
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5 h-4 w-fit mt-1">
-                      {user.role}
-                    </Badge>
-                  )}
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -107,10 +93,6 @@ export function NavUser({
               <DropdownMenuItem className="cursor-pointer">
                 <UserCircle className="mr-2 h-4 w-4" />
                 Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
               </DropdownMenuItem>
               <DropdownMenuItem className="cursor-pointer">
                 <Bell className="mr-2 h-4 w-4" />
