@@ -741,40 +741,6 @@ export default function TeacherGradesPage() {
                     );
                   })}
                 </tbody>
-                {/* Summary Footer */}
-                <tfoot className="sticky bottom-0 bg-background border-t-2">
-                  <tr className="font-semibold">
-                    <td colSpan={4} className="p-3 text-right border-r">
-                      Class Average:
-                    </td>
-                    <td colSpan={4} className="p-3 text-center bg-green-50 border-r">
-                      {(() => {
-                        const scores = students.map(s => grades[s.id].CAT1.percentage).filter(p => p !== null) as number[];
-                        return scores.length > 0 ? `${Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)}%` : "-";
-                      })()}
-                    </td>
-                    <td colSpan={4} className="p-3 text-center bg-blue-50 border-r">
-                      {(() => {
-                        const scores = students.map(s => grades[s.id].MID.percentage).filter(p => p !== null) as number[];
-                        return scores.length > 0 ? `${Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)}%` : "-";
-                      })()}
-                    </td>
-                    <td colSpan={4} className="p-3 text-center bg-purple-50 border-r">
-                      {(() => {
-                        const scores = students.map(s => grades[s.id].EOT.percentage).filter(p => p !== null) as number[];
-                        return scores.length > 0 ? `${Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)}%` : "-";
-                      })()}
-                    </td>
-                    <td className="p-3 text-center bg-yellow-50">
-                      {(() => {
-                        const allScores = students.flatMap(s =>
-                          [grades[s.id].CAT1.percentage, grades[s.id].MID.percentage, grades[s.id].EOT.percentage]
-                        ).filter(p => p !== null) as number[];
-                        return allScores.length > 0 ? `${Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length)}%` : "-";
-                      })()}
-                    </td>
-                  </tr>
-                </tfoot>
               </table>
             </div>
           )}
