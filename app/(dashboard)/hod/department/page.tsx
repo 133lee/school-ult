@@ -58,8 +58,7 @@ export default function HODDepartmentManagement() {
   const [isLeftColumnCollapsed, setIsLeftColumnCollapsed] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [currentView, setCurrentView] = useState<ViewType>("overview");
-  const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
-  const [selectedSubject, setSelectedSubject] = useState<string>("");
+  const [classSubjectPairs, setClassSubjectPairs] = useState<Record<string, string>>({});
   const [isNoticeDialogOpen, setIsNoticeDialogOpen] = useState(false);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
 
@@ -807,80 +806,153 @@ export default function HODDepartmentManagement() {
                         <div className="pt-4 border-t">
                           <h4 className="text-sm font-semibold mb-3">Assign New Classes</h4>
                           <div className="space-y-4">
-                            <div>
-                              <label className="text-xs text-muted-foreground mb-2 block">
-                                Select Classes (Multiple)
-                              </label>
-                              <Card className="p-3 max-h-64 overflow-y-auto">
-                                <div className="space-y-2">
-                                  {availableClasses.map((className) => (
-                                    <div
-                                      key={className}
-                                      className="flex items-center space-x-2 p-2 rounded-md hover:bg-accent transition-colors"
-                                    >
-                                      <Checkbox
-                                        id={`class-${className}`}
-                                        checked={selectedClasses.includes(className)}
-                                        onCheckedChange={(checked) => {
-                                          if (checked) {
-                                            setSelectedClasses([...selectedClasses, className]);
+                            {/* Two Column Selection */}
+                            <div className="grid grid-cols-2 gap-3">
+                              {/* Classes Column */}
+                              <div>
+                                <label className="text-xs text-muted-foreground mb-2 block">
+                                  Select Classes
+                                </label>
+                                <Card className="p-2 max-h-56 overflow-y-auto">
+                                  <div className="space-y-1">
+                                    {availableClasses.map((className) => (
+                                      <div
+                                        key={className}
+                                        className={cn(
+                                          "flex items-center space-x-2 p-2 rounded-md hover:bg-accent transition-colors cursor-pointer",
+                                          classSubjectPairs[className] && "bg-accent"
+                                        )}
+                                        onClick={() => {
+                                          if (!classSubjectPairs[className]) {
+                                            // Add class with empty subject
+                                            setClassSubjectPairs({ ...classSubjectPairs, [className]: "" });
                                           } else {
-                                            setSelectedClasses(
-                                              selectedClasses.filter((c) => c !== className)
-                                            );
+                                            // Remove class
+                                            const newPairs = { ...classSubjectPairs };
+                                            delete newPairs[className];
+                                            setClassSubjectPairs(newPairs);
                                           }
                                         }}
-                                      />
-                                      <label
-                                        htmlFor={`class-${className}`}
-                                        className="text-sm flex-1 cursor-pointer"
                                       >
-                                        {className}
-                                      </label>
-                                      {selectedTeacher.classes.includes(className) && (
-                                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                          Assigned
-                                        </Badge>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              </Card>
-                              {selectedClasses.length > 0 && (
-                                <p className="text-xs text-muted-foreground mt-2">
-                                  {selectedClasses.length} class(es) selected
-                                </p>
-                              )}
+                                        <Checkbox
+                                          checked={!!classSubjectPairs[className]}
+                                          className="pointer-events-none"
+                                        />
+                                        <span className="text-sm flex-1">{className}</span>
+                                        {selectedTeacher.classes.includes(className) && (
+                                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                            Assigned
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </Card>
+                              </div>
+
+                              {/* Subjects Column */}
+                              <div>
+                                <label className="text-xs text-muted-foreground mb-2 block">
+                                  Select Subjects
+                                </label>
+                                <Card className="p-2 max-h-56 overflow-y-auto">
+                                  <div className="space-y-1">
+                                    {selectedTeacher.subjects.map((subject) => (
+                                      <div
+                                        key={subject}
+                                        className={cn(
+                                          "flex items-center space-x-2 p-2 rounded-md hover:bg-accent transition-colors cursor-pointer",
+                                          Object.values(classSubjectPairs).includes(subject) && "bg-accent"
+                                        )}
+                                        onClick={() => {
+                                          // Assign this subject to all selected classes that don't have a subject yet
+                                          const newPairs = { ...classSubjectPairs };
+                                          Object.keys(newPairs).forEach(className => {
+                                            if (newPairs[className] === "") {
+                                              newPairs[className] = subject;
+                                            }
+                                          });
+                                          setClassSubjectPairs(newPairs);
+                                        }}
+                                      >
+                                        <Checkbox
+                                          checked={Object.values(classSubjectPairs).includes(subject)}
+                                          className="pointer-events-none"
+                                        />
+                                        <span className="text-sm flex-1">{subject}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </Card>
+                              </div>
                             </div>
-                            <div>
-                              <label className="text-xs text-muted-foreground mb-2 block">
-                                Select Subject
-                              </label>
-                              <select
-                                className="w-full p-2 border rounded-md text-sm"
-                                value={selectedSubject}
-                                onChange={(e) => setSelectedSubject(e.target.value)}
-                              >
-                                <option value="">Choose a subject...</option>
-                                {selectedTeacher.subjects.map((subject) => (
-                                  <option key={subject} value={subject}>
-                                    {subject}
-                                  </option>
-                                ))}
-                              </select>
+
+                            {/* Selected Pairs Preview */}
+                            {Object.keys(classSubjectPairs).length > 0 && (
+                              <div>
+                                <label className="text-xs text-muted-foreground mb-2 block">
+                                  Selected Assignments ({Object.keys(classSubjectPairs).filter(c => classSubjectPairs[c]).length})
+                                </label>
+                                <Card className="p-3">
+                                  <div className="space-y-2">
+                                    {Object.entries(classSubjectPairs).map(([className, subject]) => (
+                                      <div
+                                        key={className}
+                                        className="flex items-center justify-between text-sm p-2 rounded-md bg-muted/50"
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+                                          <span className="font-medium">{className}</span>
+                                          <span className="text-muted-foreground">→</span>
+                                          <span className={cn(
+                                            "text-xs",
+                                            subject ? "text-foreground" : "text-muted-foreground italic"
+                                          )}>
+                                            {subject || "No subject selected"}
+                                          </span>
+                                        </div>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-6 w-6 p-0"
+                                          onClick={() => {
+                                            const newPairs = { ...classSubjectPairs };
+                                            delete newPairs[className];
+                                            setClassSubjectPairs(newPairs);
+                                          }}
+                                        >
+                                          <X className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </Card>
+                              </div>
+                            )}
+
+                            {/* Instructions */}
+                            <div className="text-xs text-muted-foreground bg-muted/30 p-3 rounded-md">
+                              <p className="font-medium mb-1">How to assign:</p>
+                              <ol className="list-decimal list-inside space-y-1">
+                                <li>Click classes you want to assign</li>
+                                <li>Click subject to assign to selected classes</li>
+                                <li>Review assignments above and remove if needed</li>
+                                <li>Click "Assign All" to confirm</li>
+                              </ol>
                             </div>
+
                             <Button
                               className="w-full"
                               size="sm"
-                              disabled={selectedClasses.length === 0 || !selectedSubject}
+                              disabled={Object.keys(classSubjectPairs).length === 0 ||
+                                       Object.values(classSubjectPairs).some(s => !s)}
                               onClick={() => {
                                 // Handle assignment
-                                setSelectedClasses([]);
-                                setSelectedSubject("");
+                                setClassSubjectPairs({});
                               }}
                             >
                               <Plus className="h-4 w-4 mr-2" />
-                              Assign {selectedClasses.length > 0 ? `${selectedClasses.length} Class(es)` : "Classes"}
+                              Assign All ({Object.keys(classSubjectPairs).filter(c => classSubjectPairs[c]).length})
                             </Button>
                           </div>
                         </div>
