@@ -27,6 +27,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
 interface Teacher {
@@ -47,6 +48,8 @@ export default function HODDepartmentManagement() {
   const [isLeftColumnCollapsed, setIsLeftColumnCollapsed] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [currentView, setCurrentView] = useState<ViewType>("overview");
+  const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<string>("");
 
   // Department subjects mapping
   const departmentSubjects: Record<string, string[]> = {
@@ -55,6 +58,18 @@ export default function HODDepartmentManagement() {
     Languages: ["English", "Kiswahili", "French"],
     Arts: ["Music", "Art", "Drama"],
   };
+
+  // Available classes
+  const availableClasses = [
+    "Grade 9A",
+    "Grade 9B",
+    "Grade 10A",
+    "Grade 10B",
+    "Grade 11A",
+    "Grade 11B",
+    "Grade 12A",
+    "Grade 12B",
+  ];
 
   // Mock all teachers data
   const allTeachers: Teacher[] = [
@@ -754,27 +769,62 @@ export default function HODDepartmentManagement() {
 
                         {/* Add New Assignment */}
                         <div className="pt-4 border-t">
-                          <h4 className="text-sm font-semibold mb-3">Assign New Class</h4>
-                          <div className="space-y-3">
+                          <h4 className="text-sm font-semibold mb-3">Assign New Classes</h4>
+                          <div className="space-y-4">
                             <div>
-                              <label className="text-xs text-muted-foreground mb-1.5 block">
-                                Select Class
+                              <label className="text-xs text-muted-foreground mb-2 block">
+                                Select Classes (Multiple)
                               </label>
-                              <select className="w-full p-2 border rounded-md text-sm">
-                                <option value="">Choose a class...</option>
-                                <option value="Grade 9A">Grade 9A</option>
-                                <option value="Grade 9B">Grade 9B</option>
-                                <option value="Grade 10A">Grade 10A</option>
-                                <option value="Grade 10B">Grade 10B</option>
-                                <option value="Grade 11A">Grade 11A</option>
-                                <option value="Grade 11B">Grade 11B</option>
-                              </select>
+                              <Card className="p-3 max-h-64 overflow-y-auto">
+                                <div className="space-y-2">
+                                  {availableClasses.map((className) => (
+                                    <div
+                                      key={className}
+                                      className="flex items-center space-x-2 p-2 rounded-md hover:bg-accent transition-colors"
+                                    >
+                                      <Checkbox
+                                        id={`class-${className}`}
+                                        checked={selectedClasses.includes(className)}
+                                        onCheckedChange={(checked) => {
+                                          if (checked) {
+                                            setSelectedClasses([...selectedClasses, className]);
+                                          } else {
+                                            setSelectedClasses(
+                                              selectedClasses.filter((c) => c !== className)
+                                            );
+                                          }
+                                        }}
+                                      />
+                                      <label
+                                        htmlFor={`class-${className}`}
+                                        className="text-sm flex-1 cursor-pointer"
+                                      >
+                                        {className}
+                                      </label>
+                                      {selectedTeacher.classes.includes(className) && (
+                                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                          Assigned
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </Card>
+                              {selectedClasses.length > 0 && (
+                                <p className="text-xs text-muted-foreground mt-2">
+                                  {selectedClasses.length} class(es) selected
+                                </p>
+                              )}
                             </div>
                             <div>
-                              <label className="text-xs text-muted-foreground mb-1.5 block">
+                              <label className="text-xs text-muted-foreground mb-2 block">
                                 Select Subject
                               </label>
-                              <select className="w-full p-2 border rounded-md text-sm">
+                              <select
+                                className="w-full p-2 border rounded-md text-sm"
+                                value={selectedSubject}
+                                onChange={(e) => setSelectedSubject(e.target.value)}
+                              >
                                 <option value="">Choose a subject...</option>
                                 {selectedTeacher.subjects.map((subject) => (
                                   <option key={subject} value={subject}>
@@ -783,9 +833,18 @@ export default function HODDepartmentManagement() {
                                 ))}
                               </select>
                             </div>
-                            <Button className="w-full" size="sm">
+                            <Button
+                              className="w-full"
+                              size="sm"
+                              disabled={selectedClasses.length === 0 || !selectedSubject}
+                              onClick={() => {
+                                // Handle assignment
+                                setSelectedClasses([]);
+                                setSelectedSubject("");
+                              }}
+                            >
                               <Plus className="h-4 w-4 mr-2" />
-                              Assign Class
+                              Assign {selectedClasses.length > 0 ? `${selectedClasses.length} Class(es)` : "Classes"}
                             </Button>
                           </div>
                         </div>
