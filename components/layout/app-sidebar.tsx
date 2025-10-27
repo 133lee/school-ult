@@ -18,6 +18,7 @@ import {
     CalendarCheck,
     BarChart3,
     Calendar,
+    Bell,
 } from "lucide-react";
 import {
     Sidebar,
@@ -114,6 +115,16 @@ const AppSidebar = ({ userRole = "ADMIN", ...props }: AppSidebarProps) => {
                     title: "Reports",
                     url: "/admin/reports",
                     icon: FileText,
+                },
+            ],
+        },
+        {
+            label: "Communications",
+            items: [
+                {
+                    title: "Notices & Events",
+                    url: "/admin/communications",
+                    icon: Bell,
                 },
             ],
         },
