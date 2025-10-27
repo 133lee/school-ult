@@ -364,26 +364,267 @@ const AdminReports = () => {
 
         {/* Teacher Reports */}
         <TabsContent value="teacher" className="space-y-6">
+          {/* Teacher Selection */}
           <Card>
             <CardHeader>
-              <CardTitle>Teacher Performance Metrics</CardTitle>
+              <CardTitle>Select Teacher</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {teacherStats.map((teacher) => (
-                  <div key={teacher.name} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h4 className="font-semibold">{teacher.name}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {teacher.classes} classes assigned
-                      </p>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label>Teacher Name</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select teacher" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="smith">Mr. Smith</SelectItem>
+                      <SelectItem value="johnson">Mrs. Johnson</SelectItem>
+                      <SelectItem value="williams">Dr. Williams</SelectItem>
+                      <SelectItem value="brown">Ms. Brown</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Subject Filter</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All subjects" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Subjects</SelectItem>
+                      <SelectItem value="math">Mathematics</SelectItem>
+                      <SelectItem value="english">English</SelectItem>
+                      <SelectItem value="science">Science</SelectItem>
+                      <SelectItem value="history">History</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Term/Semester</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="This term" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="this-term">This Term</SelectItem>
+                      <SelectItem value="last-term">Last Term</SelectItem>
+                      <SelectItem value="term-1">Term 1</SelectItem>
+                      <SelectItem value="term-2">Term 2</SelectItem>
+                      <SelectItem value="term-3">Term 3</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-end">
+                  <Button className="w-full">
+                    <FileText className="h-4 w-4 mr-2" />
+                    View Report
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Teacher Overview Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Total Classes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">4</div>
+                <p className="text-xs text-muted-foreground mt-1">Classes taught this term</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Average Pass Rate</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">78%</div>
+                <p className="text-xs text-muted-foreground mt-1">Across all classes</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">120</div>
+                <p className="text-xs text-muted-foreground mt-1">Across all classes</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Avg Class Attendance</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">93%</div>
+                <p className="text-xs text-muted-foreground mt-1">Registration compliance</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Class Performance Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Class Performance Overview</CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">Pass rate and student count per class</p>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={[
+                    { class: "Grade 9A", passRate: 85, students: 28, underperforming: false },
+                    { class: "Grade 9B", passRate: 72, students: 32, underperforming: true },
+                    { class: "Grade 10A", passRate: 81, students: 30, underperforming: false },
+                    { class: "Grade 11A", passRate: 76, students: 30, underperforming: false },
+                  ]}
+                  layout="vertical"
+                  margin={{ left: 80, right: 30 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="class" type="category" width={70} />
+                  <Tooltip formatter={(value) => `${value}%`} />
+                  <Bar dataKey="passRate" fill="#3b82f6" name="Pass Rate %" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Attendance and Registration Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Attendance & Registration Details */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Attendance & Registration</CardTitle>
+                <p className="text-xs text-muted-foreground mt-1">Per class tracking</p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {[
+                    { class: "Grade 9A", attendance: 95, compliance: "100%", status: "good" },
+                    { class: "Grade 9B", attendance: 88, compliance: "95%", status: "warning" },
+                    { class: "Grade 10A", attendance: 92, compliance: "100%", status: "good" },
+                    { class: "Grade 11A", attendance: 94, compliance: "98%", status: "good" },
+                  ].map((item) => (
+                    <div key={item.class} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{item.class}</p>
+                        <p className="text-xs text-muted-foreground">Registration: {item.compliance}</p>
+                      </div>
+                      <div className="text-right">
+                        <div className={`text-sm font-semibold ${item.status === 'warning' ? 'text-yellow-600' : 'text-green-600'}`}>
+                          {item.attendance}%
+                        </div>
+                        <p className="text-xs text-muted-foreground">Attendance</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold">{teacher.attendance}%</div>
-                      <p className="text-xs text-muted-foreground">Attendance marking</p>
-                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Grade Distribution */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Grade Distribution</CardTitle>
+                <p className="text-xs text-muted-foreground mt-1">All classes combined</p>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={280}>
+                  <RechartsPieChart>
+                    <Pie
+                      data={[
+                        { name: "A (90-100%)", value: 24, color: "#10b981" },
+                        { name: "B (80-89%)", value: 45, color: "#3b82f6" },
+                        { name: "C (70-79%)", value: 36, color: "#f59e0b" },
+                        { name: "D (60-69%)", value: 12, color: "#ef4444" },
+                        { name: "F (<60%)", value: 3, color: "#6b7280" },
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, value }) => `${name}: ${value}`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {[
+                        { color: "#10b981" },
+                        { color: "#3b82f6" },
+                        { color: "#f59e0b" },
+                        { color: "#ef4444" },
+                        { color: "#6b7280" },
+                      ].map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => `${value} students`} />
+                  </RechartsPieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Semester/Term Comparison */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Performance Trend</CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">Average pass rate comparison across terms</p>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart
+                  data={[
+                    { term: "Term 1", passRate: 72, trend: "📈" },
+                    { term: "Term 2", passRate: 75, trend: "📈" },
+                    { term: "Term 3", passRate: 78, trend: "📈" },
+                    { term: "Current", passRate: 78, trend: "➡️" },
+                  ]}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="term" />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip formatter={(value) => `${value}%`} />
+                  <Line
+                    type="monotone"
+                    dataKey="passRate"
+                    stroke="#3b82f6"
+                    name="Pass Rate %"
+                    strokeWidth={2}
+                    dot={{ fill: '#3b82f6', r: 5 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+              <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                <p className="text-sm font-medium text-green-900">Positive Trend</p>
+                <p className="text-xs text-green-700 mt-1">Pass rate improved by 6% from Term 1 to Current</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Outlier Detection */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Performance Flags</CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">Classes needing attention</p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex items-start gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <div className="mt-1">
+                    <p className="text-sm font-medium text-yellow-900">Grade 9B - Underperforming</p>
+                    <p className="text-xs text-yellow-700 mt-1">Pass rate is 72%, which is 6% below school average (78%)</p>
                   </div>
-                ))}
+                </div>
+                <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="mt-1">
+                    <p className="text-sm font-medium text-blue-900">Grade 9B - Low Attendance</p>
+                    <p className="text-xs text-blue-700 mt-1">Attendance at 88% - consider follow-up for improvement</p>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
