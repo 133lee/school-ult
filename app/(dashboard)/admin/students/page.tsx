@@ -569,21 +569,12 @@ export default function StudentManagementDashboard() {
   };
 
   const downloadTemplate = () => {
-    const csvContent = `First Name,Last Name,Email,Grade,Date of Birth,Gender,Phone,Address,Parent Name,Parent Email,Admission Date,Status
-John,Doe,john.doe@school.edu,Grade 10,2010-05-15,male,+1234567890,123 Main Street,Jane Doe,jane.doe@email.com,2025-10-27,Active
-Alice,Smith,alice.smith@school.edu,Grade 9,2011-03-22,female,+1234567891,456 Oak Avenue,Bob Smith,bob.smith@email.com,2025-10-27,Active
-Charlie,Brown,charlie.brown@school.edu,Grade 10,2010-07-10,male,+1234567892,789 Pine Road,Diana Brown,diana.brown@email.com,2025-10-27,Active
-Eva,Johnson,eva.johnson@school.edu,Grade 9,2011-11-05,female,+1234567893,321 Elm Street,Frank Johnson,frank.johnson@email.com,2025-10-27,Inactive
-Grace,Lee,grace.lee@school.edu,Grade 11,2009-02-28,female,+1234567894,654 Maple Drive,Henry Lee,henry.lee@email.com,2025-10-27,Active`;
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "students_template.csv";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    const link = document.createElement("a");
+    link.href = "/students_template.csv";
+    link.download = "students_template.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (

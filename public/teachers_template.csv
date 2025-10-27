@@ -1,0 +1,6 @@
+Name,Email,Subject,Department,Status,Phone,Qualifications
+John Doe,john.doe@school.edu,Mathematics,Sciences,Active,+1234567890,B.Sc, M.Ed
+Jane Smith,jane.smith@school.edu,Physics,Sciences,Active,+1234567891,B.Sc Physics,M.Ed
+Robert Brown,robert.brown@school.edu,Chemistry,Sciences,Active,+1234567892,B.Sc Chemistry,M.Ed
+Sarah Johnson,sarah.johnson@school.edu,English,Humanities,Active,+1234567893,B.A English,M.Ed
+Michael Davis,michael.davis@school.edu,History,Humanities,Inactive,+1234567894,B.A History,M.Ed

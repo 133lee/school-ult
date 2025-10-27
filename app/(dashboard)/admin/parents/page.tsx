@@ -365,21 +365,12 @@ export default function ParentsManagementDashboard() {
   };
 
   const downloadTemplate = () => {
-    const csvContent = `Name,Email,Phone,Relationship,Occupation,Status,Children
-John Doe,john.doe@email.com,+1234567890,Father,Engineer,Active,John Doe Jr
-Jane Smith,jane.smith@email.com,+1234567891,Mother,Doctor,Active,Alice Smith
-Robert Brown,robert.brown@email.com,+1234567892,Father,Lawyer,Active,Charlie Brown;Eva Brown
-Sarah Johnson,sarah.johnson@email.com,+1234567893,Guardian,Teacher,Active,Grace Johnson
-Michael Davis,michael.davis@email.com,+1234567894,Father,Businessman,Inactive,Henry Davis`;
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "parents_template.csv";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    const link = document.createElement("a");
+    link.href = "/parents_template.csv";
+    link.download = "parents_template.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (

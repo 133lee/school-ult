@@ -388,21 +388,12 @@ export default function TeacherManagementDashboard() {
   };
 
   const downloadTemplate = () => {
-    const csvContent = `Name,Email,Subject,Department,Status,Phone,Qualifications
-John Doe,john.doe@school.edu,Mathematics,Sciences,Active,+1234567890,B.Sc, M.Ed
-Jane Smith,jane.smith@school.edu,Physics,Sciences,Active,+1234567891,B.Sc Physics,M.Ed
-Robert Brown,robert.brown@school.edu,Chemistry,Sciences,Active,+1234567892,B.Sc Chemistry,M.Ed
-Sarah Johnson,sarah.johnson@school.edu,English,Humanities,Active,+1234567893,B.A English,M.Ed
-Michael Davis,michael.davis@school.edu,History,Humanities,Inactive,+1234567894,B.A History,M.Ed`;
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "teachers_template.csv";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    const link = document.createElement("a");
+    link.href = "/teachers_template.csv";
+    link.download = "teachers_template.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleBulkInvite = async () => {
