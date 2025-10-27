@@ -504,7 +504,7 @@ export default function StudentManagementDashboard() {
               variant="outline"
               className="flex-1 sm:flex-none"
               onClick={() => setImportDialogOpen(true)}>
-              <Upload className="h-4 w-4 mr-2" />
+              <Download className="h-4 w-4 mr-2" />
               Import
             </Button>
             <DialogContent>
@@ -536,7 +536,7 @@ export default function StudentManagementDashboard() {
                   onClick={downloadTemplate}
                   variant="outline"
                   className="w-full">
-                  <Download className="h-4 w-4 mr-2" />
+                  <Upload className="h-4 w-4 mr-2" />
                   Download Template
                 </Button>
               </div>
