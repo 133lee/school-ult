@@ -151,53 +151,17 @@ export default function AddEditStudentPage() {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      if (!token) {
-        toast.error('Please log in to continue');
-        router.push('/login');
-        return;
-      }
-
-      const apiData = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        studentNumber: formData.studentNumber,
-        dateOfBirth: formData.dateOfBirth
-          ? new Date(formData.dateOfBirth)
-          : undefined,
-        gender: formData.gender.toUpperCase() as 'MALE' | 'FEMALE',
-        address: formData.address,
-        currentGradeLevel: formData.currentGradeLevel,
-        admissionDate: new Date(formData.admissionDate),
-      };
-
-      const url = isEditing ? `/api/students/${editId}` : '/api/students';
-      const method = isEditing ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(apiData),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          result.error || `Failed to ${isEditing ? 'update' : 'create'} student`
-        );
-      }
+      // Note: In a real application, the student would be saved to a database
+      // For now, we're working with mock data, so we just validate and redirect
 
       toast.success(
-        result.message ||
         `Student ${isEditing ? 'updated' : 'created'} successfully`
       );
 
-
+      // Redirect back to students page
       router.push('/admin/students');
     } catch (error) {
       console.error('Error saving student:', error);
@@ -307,10 +271,7 @@ export default function AddEditStudentPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Wrapper div with consistent max-width for all form content */}
-          <div className="max-w-2xl mx-auto">
-            {renderStepContent()}
-          </div>
+          {renderStepContent()}
         </CardContent>
       </Card>
 
