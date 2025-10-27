@@ -40,7 +40,15 @@ import {
   PieChart as RechartsPieChart,
   Pie,
   Cell,
+  LabelList,
 } from "recharts";
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import { TrendingUp } from "lucide-react";
 
 const AdminReports = () => {
   const [reportType, setReportType] = useState("attendance");
@@ -364,27 +372,14 @@ const AdminReports = () => {
 
         {/* Teacher Reports */}
         <TabsContent value="teacher" className="space-y-6">
-          {/* Teacher Selection */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Select Teacher</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <Label>Teacher Name</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select teacher" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="smith">Mr. Smith</SelectItem>
-                      <SelectItem value="johnson">Mrs. Johnson</SelectItem>
-                      <SelectItem value="williams">Dr. Williams</SelectItem>
-                      <SelectItem value="brown">Ms. Brown</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+          {/* Top Row: Filters and Selection */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Report Filters */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Report Filters</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Subject Filter</Label>
                   <Select>
@@ -415,83 +410,165 @@ const AdminReports = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex items-end">
-                  <Button className="w-full">
-                    <FileText className="h-4 w-4 mr-2" />
-                    View Report
-                  </Button>
+                <div className="space-y-2">
+                  <Label>Date Range</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="this-week">This Week</SelectItem>
+                      <SelectItem value="this-month">This Month</SelectItem>
+                      <SelectItem value="this-term">This Term</SelectItem>
+                      <SelectItem value="this-year">This Year</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Teacher Overview Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Teacher Selection */}
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">Total Classes</CardTitle>
+              <CardHeader>
+                <CardTitle className="text-sm">Select Teacher</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">4</div>
-                <p className="text-xs text-muted-foreground mt-1">Classes taught this term</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">Average Pass Rate</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">78%</div>
-                <p className="text-xs text-muted-foreground mt-1">Across all classes</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">120</div>
-                <p className="text-xs text-muted-foreground mt-1">Across all classes</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">Avg Class Attendance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">93%</div>
-                <p className="text-xs text-muted-foreground mt-1">Registration compliance</p>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Teacher Name</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select teacher" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="smith">Mr. Smith</SelectItem>
+                      <SelectItem value="johnson">Mrs. Johnson</SelectItem>
+                      <SelectItem value="williams">Dr. Williams</SelectItem>
+                      <SelectItem value="brown">Ms. Brown</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button className="w-full mt-6">
+                  <FileText className="h-4 w-4 mr-2" />
+                  View Report
+                </Button>
               </CardContent>
             </Card>
           </div>
 
-          {/* Class Performance Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Class Performance Overview</CardTitle>
-              <p className="text-xs text-muted-foreground mt-1">Pass rate and student count per class</p>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart
-                  data={[
-                    { class: "Grade 9A", passRate: 85, students: 28, underperforming: false },
-                    { class: "Grade 9B", passRate: 72, students: 32, underperforming: true },
-                    { class: "Grade 10A", passRate: 81, students: 30, underperforming: false },
-                    { class: "Grade 11A", passRate: 76, students: 30, underperforming: false },
-                  ]}
-                  layout="vertical"
-                  margin={{ left: 80, right: 30 }}
+          {/* Middle Row: Cards (2x2) + Class Performance Chart */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Cards Grid (2x2) */}
+            <div className="lg:col-span-1 grid grid-cols-2 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xs font-medium">Total Classes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">4</div>
+                  <p className="text-[10px] text-muted-foreground mt-1">Classes taught</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xs font-medium">Avg Pass Rate</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">78%</div>
+                  <p className="text-[10px] text-muted-foreground mt-1">All classes</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xs font-medium">Total Students</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">120</div>
+                  <p className="text-[10px] text-muted-foreground mt-1">Across classes</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xs font-medium">Avg Attendance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">93%</div>
+                  <p className="text-[10px] text-muted-foreground mt-1">Compliance rate</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Class Performance Chart */}
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="text-sm">Class Performance Overview</CardTitle>
+                <CardDescription>Pass rate by class</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  config={{
+                    passRate: {
+                      label: "Pass Rate",
+                      color: "var(--chart-2)",
+                    },
+                    label: {
+                      color: "var(--background)",
+                    },
+                  } satisfies ChartConfig}
                 >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis dataKey="class" type="category" width={70} />
-                  <Tooltip formatter={(value) => `${value}%`} />
-                  <Bar dataKey="passRate" fill="#3b82f6" name="Pass Rate %" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+                  <BarChart
+                    data={[
+                      { class: "Grade 9A", passRate: 85 },
+                      { class: "Grade 9B", passRate: 72 },
+                      { class: "Grade 10A", passRate: 81 },
+                      { class: "Grade 11A", passRate: 76 },
+                    ]}
+                    layout="vertical"
+                    margin={{
+                      left: 70,
+                      right: 30,
+                    }}
+                    accessibilityLayer
+                  >
+                    <CartesianGrid horizontal={false} />
+                    <YAxis
+                      dataKey="class"
+                      type="category"
+                      tickLine={false}
+                      tickMargin={10}
+                      axisLine={false}
+                    />
+                    <XAxis type="number" hide />
+                    <ChartTooltip
+                      cursor={false}
+                      content={<ChartTooltipContent indicator="line" />}
+                    />
+                    <Bar
+                      dataKey="passRate"
+                      layout="vertical"
+                      fill="var(--color-passRate)"
+                      radius={4}
+                    >
+                      <LabelList
+                        dataKey="class"
+                        position="insideLeft"
+                        offset={8}
+                        className="fill-background"
+                        fontSize={12}
+                      />
+                      <LabelList
+                        dataKey="passRate"
+                        position="right"
+                        offset={8}
+                        className="fill-foreground"
+                        fontSize={12}
+                      />
+                    </Bar>
+                  </BarChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Attendance and Registration Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -527,43 +604,66 @@ const AdminReports = () => {
             </Card>
 
             {/* Grade Distribution */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Grade Distribution</CardTitle>
-                <p className="text-xs text-muted-foreground mt-1">All classes combined</p>
+            <Card className="flex flex-col">
+              <CardHeader className="items-center pb-0">
+                <CardTitle className="text-sm">Grade Distribution</CardTitle>
+                <CardDescription className="text-xs">All classes combined</CardDescription>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={280}>
+              <CardContent className="flex-1 pb-0">
+                <ChartContainer
+                  config={{
+                    visitors: {
+                      label: "Students",
+                    },
+                    chrome: {
+                      label: "A (90-100%)",
+                      color: "var(--chart-1)",
+                    },
+                    safari: {
+                      label: "B (80-89%)",
+                      color: "var(--chart-2)",
+                    },
+                    firefox: {
+                      label: "C (70-79%)",
+                      color: "var(--chart-3)",
+                    },
+                    edge: {
+                      label: "D (60-69%)",
+                      color: "var(--chart-4)",
+                    },
+                    other: {
+                      label: "F (<60%)",
+                      color: "var(--chart-5)",
+                    },
+                  } satisfies ChartConfig}
+                  className="[&_.recharts-text]:fill-background mx-auto aspect-square max-h-[250px]"
+                >
                   <RechartsPieChart>
+                    <ChartTooltip
+                      content={<ChartTooltipContent nameKey="visitors" hideLabel />}
+                    />
                     <Pie
                       data={[
-                        { name: "A (90-100%)", value: 24, color: "#10b981" },
-                        { name: "B (80-89%)", value: 45, color: "#3b82f6" },
-                        { name: "C (70-79%)", value: 36, color: "#f59e0b" },
-                        { name: "D (60-69%)", value: 12, color: "#ef4444" },
-                        { name: "F (<60%)", value: 3, color: "#6b7280" },
+                        { browser: "chrome", visitors: 24, fill: "var(--color-chrome)" },
+                        { browser: "safari", visitors: 45, fill: "var(--color-safari)" },
+                        { browser: "firefox", visitors: 36, fill: "var(--color-firefox)" },
+                        { browser: "edge", visitors: 12, fill: "var(--color-edge)" },
+                        { browser: "other", visitors: 3, fill: "var(--color-other)" },
                       ]}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, value }) => `${name}: ${value}`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
+                      dataKey="visitors"
                     >
-                      {[
-                        { color: "#10b981" },
-                        { color: "#3b82f6" },
-                        { color: "#f59e0b" },
-                        { color: "#ef4444" },
-                        { color: "#6b7280" },
-                      ].map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
+                      <LabelList
+                        dataKey="browser"
+                        className="fill-background"
+                        stroke="none"
+                        fontSize={12}
+                        formatter={(value: keyof typeof chartConfig) =>
+                          chartConfig[value]?.label
+                        }
+                      />
                     </Pie>
-                    <Tooltip formatter={(value) => `${value} students`} />
                   </RechartsPieChart>
-                </ResponsiveContainer>
+                </ChartContainer>
               </CardContent>
             </Card>
           </div>
@@ -571,35 +671,68 @@ const AdminReports = () => {
           {/* Semester/Term Comparison */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Performance Trend</CardTitle>
-              <p className="text-xs text-muted-foreground mt-1">Average pass rate comparison across terms</p>
+              <CardTitle className="text-sm">Performance Trend</CardTitle>
+              <CardDescription className="text-xs">Average pass rate comparison across terms</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
+              <ChartContainer
+                config={{
+                  desktop: {
+                    label: "Pass Rate",
+                    color: "var(--chart-1)",
+                  },
+                } satisfies ChartConfig}
+              >
                 <LineChart
+                  accessibilityLayer
                   data={[
-                    { term: "Term 1", passRate: 72, trend: "📈" },
-                    { term: "Term 2", passRate: 75, trend: "📈" },
-                    { term: "Term 3", passRate: 78, trend: "📈" },
-                    { term: "Current", passRate: 78, trend: "➡️" },
+                    { term: "Term 1", desktop: 72 },
+                    { term: "Term 2", desktop: 75 },
+                    { term: "Term 3", desktop: 78 },
+                    { term: "Current", desktop: 78 },
                   ]}
+                  margin={{
+                    top: 20,
+                    left: 12,
+                    right: 12,
+                  }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="term" />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip formatter={(value) => `${value}%`} />
-                  <Line
-                    type="monotone"
-                    dataKey="passRate"
-                    stroke="#3b82f6"
-                    name="Pass Rate %"
-                    strokeWidth={2}
-                    dot={{ fill: '#3b82f6', r: 5 }}
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="term"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
                   />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent indicator="line" />}
+                  />
+                  <Line
+                    dataKey="desktop"
+                    type="natural"
+                    stroke="var(--color-desktop)"
+                    strokeWidth={2}
+                    dot={{
+                      fill: "var(--color-desktop)",
+                    }}
+                    activeDot={{
+                      r: 6,
+                    }}
+                  >
+                    <LabelList
+                      position="top"
+                      offset={12}
+                      className="fill-foreground"
+                      fontSize={12}
+                    />
+                  </Line>
                 </LineChart>
-              </ResponsiveContainer>
+              </ChartContainer>
               <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
-                <p className="text-sm font-medium text-green-900">Positive Trend</p>
+                <div className="flex gap-2 leading-none font-medium text-green-900">
+                  Positive Trend <TrendingUp className="h-4 w-4" />
+                </div>
                 <p className="text-xs text-green-700 mt-1">Pass rate improved by 6% from Term 1 to Current</p>
               </div>
             </CardContent>
