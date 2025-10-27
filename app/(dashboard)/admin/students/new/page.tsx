@@ -26,6 +26,7 @@ import {
   generateAcademicYears,
   validateStep,
 } from '@/components/students/form-steps/form-helpers';
+import { useStudents } from '@/hooks/useStudents';
 
 const initialFormData: StudentFormData = {
   firstName: '',
@@ -61,6 +62,7 @@ export default function AddEditStudentPage() {
   const searchParams = useSearchParams();
   const editId = searchParams.get('edit');
   const isEditing = !!editId;
+  const { addStudent, updateStudent } = useStudents();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<StudentFormData>(initialFormData);
@@ -154,8 +156,38 @@ export default function AddEditStudentPage() {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Note: In a real application, the student would be saved to a database
-      // For now, we're working with mock data, so we just validate and redirect
+      if (isEditing && editId) {
+        // Update existing student
+        updateStudent(editId, {
+          name: `${formData.firstName} ${formData.lastName}`,
+          studentNumber: formData.studentNumber,
+          gender: formData.gender,
+          dateOfBirth: formData.dateOfBirth,
+          address: formData.address || '',
+          currentGradeLevel: formData.currentGradeLevel,
+          admissionDate: formData.admissionDate,
+          status: 'Active',
+        });
+      } else {
+        // Add new student
+        addStudent({
+          name: `${formData.firstName} ${formData.lastName}`,
+          studentNumber: formData.studentNumber,
+          phone: '',
+          year: new Date().getFullYear(),
+          photoUrl: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}`,
+          grade: formData.currentGradeLevel,
+          currentGradeLevel: formData.currentGradeLevel,
+          gender: formData.gender,
+          dateOfBirth: formData.dateOfBirth,
+          address: formData.address || '',
+          parentName: '',
+          parentEmail: formData.parentEmail || '',
+          status: 'Active',
+          enrollmentDate: new Date().toLocaleDateString(),
+          admissionDate: formData.admissionDate,
+        });
+      }
 
       toast.success(
         `Student ${isEditing ? 'updated' : 'created'} successfully`
