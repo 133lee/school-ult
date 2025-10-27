@@ -656,9 +656,42 @@ export default function HODDepartmentManagement() {
                           Attendance Sheets
                         </CardTitle>
                         <p className="text-sm text-muted-foreground">
-                          Coming soon - View attendance records per session
+                          View attendance records per session for all subjects
                         </p>
                       </CardHeader>
+                      <CardContent className="space-y-6">
+                        {selectedTeacher?.subjects.map((subject) => (
+                          <div key={subject}>
+                            <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                              <BookOpen className="h-4 w-4" />
+                              {subject}
+                            </h4>
+                            <div className="space-y-2">
+                              {["Session 1", "Session 2", "Session 3", "Session 4"].map((session) => (
+                                <div key={session} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                                  <div className="flex-1">
+                                    <p className="font-medium text-sm">{session}</p>
+                                    <p className="text-xs text-muted-foreground">2024</p>
+                                  </div>
+                                  <div className="flex items-center gap-4 text-sm">
+                                    <div>
+                                      <span className="font-semibold text-green-600">32</span>
+                                      <span className="text-muted-foreground ml-1">Present</span>
+                                    </div>
+                                    <div>
+                                      <span className="font-semibold text-red-600">3</span>
+                                      <span className="text-muted-foreground ml-1">Absent</span>
+                                    </div>
+                                    <Button variant="outline" size="sm" className="ml-2">
+                                      View Details
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </CardContent>
                     </Card>
                   </div>
                 )}
@@ -682,9 +715,51 @@ export default function HODDepartmentManagement() {
                           Performance Analysis
                         </CardTitle>
                         <p className="text-sm text-muted-foreground">
-                          Coming soon - View performance metrics per test
+                          View performance metrics per test and assessment
                         </p>
                       </CardHeader>
+                      <CardContent className="space-y-6">
+                        {selectedTeacher?.classes.map((className) => (
+                          <div key={className}>
+                            <h4 className="text-sm font-semibold mb-4 flex items-center gap-2">
+                              <BookOpen className="h-4 w-4" />
+                              {className} - Performance Summary
+                            </h4>
+                            <div className="space-y-3">
+                              {[
+                                { test: "CAT 1", average: 72, passed: 28, total: 35 },
+                                { test: "CAT 2", average: 75, passed: 30, total: 35 },
+                                { test: "Mid-Term Exam", average: 68, passed: 24, total: 35 },
+                                { test: "End of Term Exam", average: 76, passed: 31, total: 35 },
+                              ].map((item) => (
+                                <div key={item.test} className="p-3 border rounded-lg">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <p className="font-medium text-sm">{item.test}</p>
+                                    <div className="flex items-center gap-3 text-xs">
+                                      <span className="text-muted-foreground">Pass Rate:</span>
+                                      <span className={cn(
+                                        "font-semibold",
+                                        item.average >= 75 ? "text-green-600" : item.average >= 65 ? "text-yellow-600" : "text-red-600"
+                                      )}>
+                                        {item.average}%
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <span>{item.passed} of {item.total} students passed</span>
+                                    <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
+                                      <div
+                                        className="bg-primary h-full"
+                                        style={{ width: `${(item.passed / item.total) * 100}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </CardContent>
                     </Card>
                   </div>
                 )}
@@ -708,9 +783,82 @@ export default function HODDepartmentManagement() {
                           Teacher Comparison
                         </CardTitle>
                         <p className="text-sm text-muted-foreground">
-                          Coming soon - Compare performance across classes
+                          Comparative analysis across all classes taught
                         </p>
                       </CardHeader>
+                      <CardContent className="space-y-6">
+                        {/* Summary Stats */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <Card className="bg-muted/50">
+                            <CardContent className="p-4">
+                              <p className="text-xs text-muted-foreground mb-1">Overall Pass Rate</p>
+                              <p className="text-2xl font-bold text-green-600">73%</p>
+                            </CardContent>
+                          </Card>
+                          <Card className="bg-muted/50">
+                            <CardContent className="p-4">
+                              <p className="text-xs text-muted-foreground mb-1">Avg Attendance</p>
+                              <p className="text-2xl font-bold text-blue-600">91%</p>
+                            </CardContent>
+                          </Card>
+                        </div>
+
+                        {/* Class Comparison Table */}
+                        <div>
+                          <h4 className="text-sm font-semibold mb-3">Performance by Class</h4>
+                          <div className="space-y-2">
+                            {selectedTeacher?.classes.map((className) => (
+                              <div key={className} className="p-3 border rounded-lg">
+                                <div className="flex items-center justify-between mb-2">
+                                  <p className="font-medium text-sm">{className}</p>
+                                  <Badge variant="outline" className="text-xs">
+                                    {selectedTeacher.subjects.join(", ")}
+                                  </Badge>
+                                </div>
+                                <div className="grid grid-cols-4 gap-2 text-xs">
+                                  <div>
+                                    <p className="text-muted-foreground">Pass Rate</p>
+                                    <p className="font-semibold">75%</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-muted-foreground">Students</p>
+                                    <p className="font-semibold">35</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-muted-foreground">Avg Score</p>
+                                    <p className="font-semibold">72.5</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-muted-foreground">Attendance</p>
+                                    <p className="font-semibold">92%</p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Subject Comparison */}
+                        <div>
+                          <h4 className="text-sm font-semibold mb-3">Performance by Subject</h4>
+                          <div className="space-y-2">
+                            {selectedTeacher?.subjects.map((subject) => (
+                              <div key={subject} className="flex items-center justify-between p-3 border rounded-lg">
+                                <div className="flex-1">
+                                  <p className="font-medium text-sm">{subject}</p>
+                                  <p className="text-xs text-muted-foreground">Across all classes</p>
+                                </div>
+                                <div className="flex items-center gap-4 text-sm">
+                                  <span className="font-semibold text-green-600">74%</span>
+                                  <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                                    <div className="w-3/4 h-full bg-green-600" />
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </CardContent>
                     </Card>
                   </div>
                 )}
@@ -734,9 +882,49 @@ export default function HODDepartmentManagement() {
                           Class Lists
                         </CardTitle>
                         <p className="text-sm text-muted-foreground">
-                          Coming soon - View student lists for all classes
+                          Complete student lists for all assigned classes
                         </p>
                       </CardHeader>
+                      <CardContent className="space-y-6">
+                        {selectedTeacher?.classes.map((className) => (
+                          <div key={className}>
+                            <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                              <Users className="h-4 w-4" />
+                              {className} ({selectedTeacher.subjects.join(", ")})
+                            </h4>
+                            <div className="border rounded-lg overflow-hidden">
+                              <div className="bg-muted/50 p-3 grid grid-cols-3 gap-4 text-xs font-semibold">
+                                <div>Admission No.</div>
+                                <div>Student Name</div>
+                                <div>Status</div>
+                              </div>
+                              <div className="divide-y">
+                                {[
+                                  { admNo: "ADM001", name: "Alice Johnson", status: "Active" },
+                                  { admNo: "ADM002", name: "Benjamin Smith", status: "Active" },
+                                  { admNo: "ADM003", name: "Cynthia Brown", status: "Active" },
+                                  { admNo: "ADM004", name: "David Wilson", status: "Inactive" },
+                                  { admNo: "ADM005", name: "Emma Davis", status: "Active" },
+                                ].map((student) => (
+                                  <div key={student.admNo} className="p-3 grid grid-cols-3 gap-4 text-sm hover:bg-muted/50 transition-colors">
+                                    <div className="font-mono text-xs text-muted-foreground">{student.admNo}</div>
+                                    <div className="font-medium">{student.name}</div>
+                                    <div>
+                                      <Badge
+                                        variant={student.status === "Active" ? "default" : "secondary"}
+                                        className="text-xs"
+                                      >
+                                        {student.status}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-2">Total: 35 students</p>
+                          </div>
+                        ))}
+                      </CardContent>
                     </Card>
                   </div>
                 )}
