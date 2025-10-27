@@ -87,6 +87,7 @@ import {
 import ClassRankingsWithAnalysis from "@/components/ClassRankingsWithAnalysis";
 import Link from "next/link";
 import { useRef } from "react";
+import { generateStudentNumber } from "@/components/students/form-steps/form-helpers";
 import {
   Collapsible,
   CollapsibleContent,
@@ -473,7 +474,7 @@ export default function StudentManagementDashboard() {
         .map((h) => h.trim().toLowerCase());
 
       // Expected headers for students
-      const requiredHeaders = ["name", "email", "grade", "class"];
+      const requiredHeaders = ["first name", "last name", "email", "grade", "date of birth", "gender"];
       const missingHeaders = requiredHeaders.filter(
         (h) => !headers.includes(h)
       );
@@ -501,16 +502,30 @@ export default function StudentManagementDashboard() {
           rowData[header] = values[idx] || "";
         });
 
+        // Split name into first and last name
+        const firstName = rowData["first name"] || "";
+        const lastName = rowData["last name"] || "";
+        const fullName = `${firstName} ${lastName}`.trim();
+
+        // Auto-generate student number using the same logic as the form
+        const studentNumber = generateStudentNumber();
+
         const newStudent = {
           id: `STU${Date.now()}-${i}`,
-          admissionNumber: rowData["admission number"] || `ADM-${Date.now()}-${i}`,
-          name: rowData["name"],
+          studentNumber: studentNumber,
+          firstName: firstName,
+          lastName: lastName,
+          name: fullName,
           email: rowData["email"],
-          grade: rowData["grade"],
-          class: rowData["class"],
-          status: (rowData["status"] || "Active") as "Active" | "Inactive",
+          dateOfBirth: rowData["date of birth"],
+          gender: rowData["gender"] as "male" | "female" | "other",
+          address: rowData["address"] || "",
           phone: rowData["phone"] || "N/A",
           parentName: rowData["parent name"] || "N/A",
+          parentEmail: rowData["parent email"] || "",
+          currentGradeLevel: rowData["grade"],
+          admissionDate: rowData["admission date"] || new Date().toLocaleDateString(),
+          status: (rowData["status"] || "Active") as "Active" | "Inactive",
           enrollmentDate: new Date().toLocaleDateString(),
           performance: {
             cat1: 0,
@@ -522,7 +537,7 @@ export default function StudentManagementDashboard() {
         };
 
         // Validate required fields
-        if (newStudent.name && newStudent.email) {
+        if (firstName && lastName && newStudent.email && newStudent.gender) {
           importedStudents.push(newStudent);
         } else {
           errorCount++;
@@ -554,12 +569,12 @@ export default function StudentManagementDashboard() {
   };
 
   const downloadTemplate = () => {
-    const csvContent = `Name,Email,Grade,Class,Status,Phone,Parent Name,Admission Number
-John Doe,john.doe@school.edu,Grade 9,9A,Active,+1234567890,Jane Doe,ADM001
-Alice Smith,alice.smith@school.edu,Grade 9,9B,Active,+1234567891,Bob Smith,ADM002
-Charlie Brown,charlie.brown@school.edu,Grade 10,10A,Active,+1234567892,Diana Brown,ADM003
-Eva Johnson,eva.johnson@school.edu,Grade 10,10B,Inactive,+1234567893,Frank Johnson,ADM004
-Grace Lee,grace.lee@school.edu,Grade 11,11A,Active,+1234567894,Henry Lee,ADM005`;
+    const csvContent = `First Name,Last Name,Email,Grade,Date of Birth,Gender,Phone,Address,Parent Name,Parent Email,Admission Date,Status
+John,Doe,john.doe@school.edu,Grade 10,2010-05-15,male,+1234567890,123 Main Street,Jane Doe,jane.doe@email.com,2025-10-27,Active
+Alice,Smith,alice.smith@school.edu,Grade 9,2011-03-22,female,+1234567891,456 Oak Avenue,Bob Smith,bob.smith@email.com,2025-10-27,Active
+Charlie,Brown,charlie.brown@school.edu,Grade 10,2010-07-10,male,+1234567892,789 Pine Road,Diana Brown,diana.brown@email.com,2025-10-27,Active
+Eva,Johnson,eva.johnson@school.edu,Grade 9,2011-11-05,female,+1234567893,321 Elm Street,Frank Johnson,frank.johnson@email.com,2025-10-27,Inactive
+Grace,Lee,grace.lee@school.edu,Grade 11,2009-02-28,female,+1234567894,654 Maple Drive,Henry Lee,henry.lee@email.com,2025-10-27,Active`;
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
