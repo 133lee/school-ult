@@ -599,8 +599,8 @@ const AdminReports = () => {
                 <CardDescription className="text-xs">All classes combined</CardDescription>
               </CardHeader>
               <CardContent className="flex-1 pb-0">
-                <ChartContainer
-                  config={{
+                {(() => {
+                  const gradeDistributionConfig = {
                     visitors: {
                       label: "Students",
                     },
@@ -624,35 +624,41 @@ const AdminReports = () => {
                       label: "F (<60%)",
                       color: "var(--chart-5)",
                     },
-                  } satisfies ChartConfig}
-                  className="[&_.recharts-text]:fill-background mx-auto aspect-square max-h-[250px]"
-                >
-                  <RechartsPieChart>
-                    <ChartTooltip
-                      content={<ChartTooltipContent nameKey="visitors" hideLabel />}
-                    />
-                    <Pie
-                      data={[
-                        { browser: "chrome", visitors: 24, fill: "var(--color-chrome)" },
-                        { browser: "safari", visitors: 45, fill: "var(--color-safari)" },
-                        { browser: "firefox", visitors: 36, fill: "var(--color-firefox)" },
-                        { browser: "edge", visitors: 12, fill: "var(--color-edge)" },
-                        { browser: "other", visitors: 3, fill: "var(--color-other)" },
-                      ]}
-                      dataKey="visitors"
+                  } satisfies ChartConfig;
+
+                  return (
+                    <ChartContainer
+                      config={gradeDistributionConfig}
+                      className="[&_.recharts-text]:fill-background mx-auto aspect-square max-h-[250px]"
                     >
-                      <LabelList
-                        dataKey="browser"
-                        className="fill-background"
-                        stroke="none"
-                        fontSize={12}
-                        formatter={(value: keyof typeof chartConfig) =>
-                          chartConfig[value]?.label
-                        }
-                      />
-                    </Pie>
-                  </RechartsPieChart>
-                </ChartContainer>
+                      <RechartsPieChart>
+                        <ChartTooltip
+                          content={<ChartTooltipContent nameKey="visitors" hideLabel />}
+                        />
+                        <Pie
+                          data={[
+                            { browser: "chrome", visitors: 24, fill: "var(--color-chrome)" },
+                            { browser: "safari", visitors: 45, fill: "var(--color-safari)" },
+                            { browser: "firefox", visitors: 36, fill: "var(--color-firefox)" },
+                            { browser: "edge", visitors: 12, fill: "var(--color-edge)" },
+                            { browser: "other", visitors: 3, fill: "var(--color-other)" },
+                          ]}
+                          dataKey="visitors"
+                        >
+                          <LabelList
+                            dataKey="browser"
+                            className="fill-background"
+                            stroke="none"
+                            fontSize={12}
+                            formatter={(value: keyof typeof gradeDistributionConfig) =>
+                              gradeDistributionConfig[value]?.label
+                            }
+                          />
+                        </Pie>
+                      </RechartsPieChart>
+                    </ChartContainer>
+                  );
+                })()}
               </CardContent>
             </Card>
           </div>
