@@ -299,7 +299,7 @@ export default function AddEditStudentPage() {
       </div>
 
       {/* Step Content */}
-      <Card>
+      <Card className="min-h-[500px]">
         <CardHeader>
           <CardTitle>{steps[currentStep - 1].title}</CardTitle>
           <CardDescription>
