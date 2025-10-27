@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,14 +15,11 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   FileText,
-  Download,
   Printer,
   TrendingUp,
   Users,
   GraduationCap,
-  Calendar,
   BarChart3,
-  PieChart,
   FileSpreadsheet,
   ClipboardList,
 } from "lucide-react";
@@ -48,7 +45,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { TrendingUp } from "lucide-react";
 
 const AdminReports = () => {
   const [reportType, setReportType] = useState("attendance");
@@ -81,13 +77,6 @@ const AdminReports = () => {
     { name: "C", value: 180, color: "#f59e0b" },
     { name: "D", value: 90, color: "#ef4444" },
     { name: "F", value: 30, color: "#6b7280" },
-  ];
-
-  const teacherStats = [
-    { name: "Mr. Smith", classes: 12, attendance: 96 },
-    { name: "Mrs. Johnson", classes: 10, attendance: 98 },
-    { name: "Dr. Williams", classes: 8, attendance: 94 },
-    { name: "Ms. Brown", classes: 15, attendance: 92 },
   ];
 
   const handleGenerateReport = () => {
