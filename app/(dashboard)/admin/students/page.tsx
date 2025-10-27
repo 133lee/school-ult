@@ -732,20 +732,22 @@ export default function StudentManagementDashboard() {
                   {filteredStudents.length}
                 </span>
               </div>
-              <ScrollArea className="flex-1">
-                <StudentsTable
-                  students={paginatedStudents}
-                  onRowClick={handleRowClick}
-                  onEdit={(student) => {
-                    setSelectedStudent(student);
-                    setEditDialogOpen(true);
-                  }}
-                  onDelete={(student) => {
-                    setSelectedStudent(student);
-                    setDeleteDialogOpen(true);
-                  }}
-                  showActions={true}
-                />
+              <ScrollArea className="flex-1 h-full overflow-hidden">
+                <div className="pr-4">
+                  <StudentsTable
+                    students={paginatedStudents}
+                    onRowClick={handleRowClick}
+                    onEdit={(student) => {
+                      setSelectedStudent(student);
+                      setEditDialogOpen(true);
+                    }}
+                    onDelete={(student) => {
+                      setSelectedStudent(student);
+                      setDeleteDialogOpen(true);
+                    }}
+                    showActions={true}
+                  />
+                </div>
               </ScrollArea>
 
               {/* Pagination */}
