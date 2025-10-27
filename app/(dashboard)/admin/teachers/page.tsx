@@ -290,20 +290,110 @@ export default function TeacherManagementDashboard() {
     setDetailsSheetOpen(true);
   };
 
-  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      console.log("Importing file:", file.name);
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const lines = text.split("\n").filter((line) => line.trim());
+
+      if (lines.length === 0) {
+        toast.error("CSV file is empty");
+        return;
+      }
+
+      // Parse headers
+      const headers = lines[0]
+        .split(",")
+        .map((h) => h.trim().toLowerCase());
+
+      // Expected headers for teachers
+      const requiredHeaders = ["name", "email", "subject", "department"];
+      const missingHeaders = requiredHeaders.filter(
+        (h) => !headers.includes(h)
+      );
+
+      if (missingHeaders.length > 0) {
+        toast.error(
+          `Missing required columns: ${missingHeaders.join(", ")}`
+        );
+        return;
+      }
+
+      // Parse data rows
+      const importedTeachers: typeof teachers = [];
+      let errorCount = 0;
+
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(",").map((v) => v.trim());
+        if (values.length < requiredHeaders.length) {
+          errorCount++;
+          continue;
+        }
+
+        const rowData: Record<string, string> = {};
+        headers.forEach((header, idx) => {
+          rowData[header] = values[idx] || "";
+        });
+
+        const newTeacher = {
+          id: `TCH${Date.now()}-${i}`,
+          name: rowData["name"],
+          email: rowData["email"],
+          subject: rowData["subject"],
+          department: rowData["department"],
+          status: (rowData["status"] || "Active") as "Active" | "Inactive",
+          phone: rowData["phone"] || "N/A",
+          qualifications: rowData["qualifications"] || "N/A",
+          joinDate: new Date().toLocaleDateString(),
+          classes: [],
+          performance: {
+            avgScore: 0,
+            passRate: 0,
+            attendance: 0,
+          },
+        };
+
+        // Validate required fields
+        if (newTeacher.name && newTeacher.email && newTeacher.subject) {
+          importedTeachers.push(newTeacher);
+        } else {
+          errorCount++;
+        }
+      }
+
+      if (importedTeachers.length === 0) {
+        toast.error("No valid teacher records found in the CSV");
+        return;
+      }
+
+      // Add imported teachers to the list
+      setTeachers([...teachers, ...importedTeachers]);
+
       setImportDialogOpen(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+
+      toast.success(
+        `Successfully imported ${importedTeachers.length} teacher${
+          importedTeachers.length > 1 ? "s" : ""
+        }${errorCount > 0 ? ` (${errorCount} invalid rows skipped)` : ""}`
+      );
+    } catch (error) {
+      console.error("Error importing file:", error);
+      toast.error("Failed to import CSV file. Please check the format.");
     }
   };
 
   const downloadTemplate = () => {
-    const csvContent =
-      "Name,Email,Subject,Department,Status,Phone\nJohn Doe,john.doe@school.edu,Mathematics,Sciences,Active,+1234567890";
+    const csvContent = `Name,Email,Subject,Department,Status,Phone,Qualifications
+John Doe,john.doe@school.edu,Mathematics,Sciences,Active,+1234567890,B.Sc, M.Ed
+Jane Smith,jane.smith@school.edu,Physics,Sciences,Active,+1234567891,B.Sc Physics,M.Ed
+Robert Brown,robert.brown@school.edu,Chemistry,Sciences,Active,+1234567892,B.Sc Chemistry,M.Ed
+Sarah Johnson,sarah.johnson@school.edu,English,Humanities,Active,+1234567893,B.A English,M.Ed
+Michael Davis,michael.davis@school.edu,History,Humanities,Inactive,+1234567894,B.A History,M.Ed`;
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");

@@ -454,20 +454,112 @@ export default function StudentManagementDashboard() {
       .slice(0, 5);
   };
 
-  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      console.log("Importing file:", file.name);
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const lines = text.split("\n").filter((line) => line.trim());
+
+      if (lines.length === 0) {
+        toast.error("CSV file is empty");
+        return;
+      }
+
+      // Parse headers
+      const headers = lines[0]
+        .split(",")
+        .map((h) => h.trim().toLowerCase());
+
+      // Expected headers for students
+      const requiredHeaders = ["name", "email", "grade", "class"];
+      const missingHeaders = requiredHeaders.filter(
+        (h) => !headers.includes(h)
+      );
+
+      if (missingHeaders.length > 0) {
+        toast.error(
+          `Missing required columns: ${missingHeaders.join(", ")}`
+        );
+        return;
+      }
+
+      // Parse data rows
+      const importedStudents: typeof students = [];
+      let errorCount = 0;
+
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(",").map((v) => v.trim());
+        if (values.length < requiredHeaders.length) {
+          errorCount++;
+          continue;
+        }
+
+        const rowData: Record<string, string> = {};
+        headers.forEach((header, idx) => {
+          rowData[header] = values[idx] || "";
+        });
+
+        const newStudent = {
+          id: `STU${Date.now()}-${i}`,
+          admissionNumber: rowData["admission number"] || `ADM-${Date.now()}-${i}`,
+          name: rowData["name"],
+          email: rowData["email"],
+          grade: rowData["grade"],
+          class: rowData["class"],
+          status: (rowData["status"] || "Active") as "Active" | "Inactive",
+          phone: rowData["phone"] || "N/A",
+          parentName: rowData["parent name"] || "N/A",
+          enrollmentDate: new Date().toLocaleDateString(),
+          performance: {
+            cat1: 0,
+            cat2: 0,
+            exam: 0,
+          },
+          attendance: 0,
+          grades: [],
+        };
+
+        // Validate required fields
+        if (newStudent.name && newStudent.email) {
+          importedStudents.push(newStudent);
+        } else {
+          errorCount++;
+        }
+      }
+
+      if (importedStudents.length === 0) {
+        toast.error("No valid student records found in the CSV");
+        return;
+      }
+
+      // Add imported students to the list
+      setStudents([...students, ...importedStudents]);
+
       setImportDialogOpen(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+
+      toast.success(
+        `Successfully imported ${importedStudents.length} student${
+          importedStudents.length > 1 ? "s" : ""
+        }${errorCount > 0 ? ` (${errorCount} invalid rows skipped)` : ""}`
+      );
+    } catch (error) {
+      console.error("Error importing file:", error);
+      toast.error("Failed to import CSV file. Please check the format.");
     }
   };
 
   const downloadTemplate = () => {
-    const csvContent =
-      "Name,Email,Grade,Class,Status,Phone\nJohn Doe,john.doe@school.edu,Grade 9,9A,Active,+1234567890";
+    const csvContent = `Name,Email,Grade,Class,Status,Phone,Parent Name,Admission Number
+John Doe,john.doe@school.edu,Grade 9,9A,Active,+1234567890,Jane Doe,ADM001
+Alice Smith,alice.smith@school.edu,Grade 9,9B,Active,+1234567891,Bob Smith,ADM002
+Charlie Brown,charlie.brown@school.edu,Grade 10,10A,Active,+1234567892,Diana Brown,ADM003
+Eva Johnson,eva.johnson@school.edu,Grade 10,10B,Inactive,+1234567893,Frank Johnson,ADM004
+Grace Lee,grace.lee@school.edu,Grade 11,11A,Active,+1234567894,Henry Lee,ADM005`;
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
