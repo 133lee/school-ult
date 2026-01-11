@@ -713,7 +713,6 @@ enum Role {
   ADMIN
   HEAD_TEACHER
   DEPUTY_HEAD
-  HOD
   TEACHER
   CLERK
 }
