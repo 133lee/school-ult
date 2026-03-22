@@ -11,9 +11,10 @@ import { UnauthorizedError, NotFoundError, ValidationError } from "@/lib/errors"
  */
 
 // Service context for authorization
+// NOTE: HOD is a POSITION (Department.hodTeacherId), not a role
 export interface ServiceContext {
   userId: string;
-  role: "ADMIN" | "HEAD_TEACHER" | "HOD" | "TEACHER" | "CLERK";
+  role: "ADMIN" | "HEAD_TEACHER" | "DEPUTY_HEAD" | "TEACHER" | "CLERK";
 }
 
 // Input DTOs

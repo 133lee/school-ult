@@ -39,7 +39,7 @@ const departmentFormSchema = z.object({
     .max(10, "Code must be 10 characters or less"),
   description: z.string().optional(),
   status: z.nativeEnum(DepartmentStatus),
-  hodId: z.string().optional(),
+  hodTeacherId: z.string().optional(),
 });
 
 type DepartmentFormValues = z.infer<typeof departmentFormSchema>;
@@ -74,7 +74,7 @@ export function DepartmentForm({
       code: initialData?.code || "",
       description: initialData?.description || "",
       status: initialData?.status || DepartmentStatus.ACTIVE,
-      hodId: initialData?.hodId || "",
+      hodTeacherId: initialData?.hodTeacherId || "",
     },
   });
 
@@ -83,7 +83,7 @@ export function DepartmentForm({
 
     switch (currentStep) {
       case 1:
-        fieldsToValidate = ["name", "code", "description", "status", "hodId"];
+        fieldsToValidate = ["name", "code", "description", "status", "hodTeacherId"];
         break;
     }
 
@@ -262,7 +262,7 @@ export function DepartmentForm({
 
                 <FormField
                   control={form.control}
-                  name="hodId"
+                  name="hodTeacherId"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>
@@ -362,9 +362,9 @@ export function DepartmentForm({
                       Head of Department:
                     </dt>
                     <dd className="font-semibold">
-                      {form.getValues("hodId")
+                      {form.getValues("hodTeacherId")
                         ? hodOptions.find(
-                            (hod) => hod.id === form.getValues("hodId")
+                            (hod) => hod.id === form.getValues("hodTeacherId")
                           )?.name || "Not found"
                         : "Not assigned"}
                     </dd>

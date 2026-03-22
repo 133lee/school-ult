@@ -62,7 +62,7 @@ export function DepartmentsTable({
   console.log("[TABLE] DepartmentsTable rendering with departments - HOD data:", departments.map(d => ({
     departmentId: d.id,
     departmentName: d.name,
-    hodId: d.hod?.id,
+    hodTeacherId: d.hod?.id,
     hod: d.hod,
   })));
 

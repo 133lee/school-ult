@@ -5,43 +5,47 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model AcademicYear {
-  id                        String                     @id @default(cuid())
-  year                      Int                        @unique
+  id                        String                      @id @default(cuid())
+  year                      Int                         @unique
   startDate                 DateTime
   endDate                   DateTime
-  isActive                  Boolean                    @default(false)
-  isClosed                  Boolean                    @default(false)
-  createdAt                 DateTime                   @default(now())
-  updatedAt                 DateTime                   @updatedAt
+  isActive                  Boolean                     @default(false)
+  isClosed                  Boolean                     @default(false)
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime                    @updatedAt
   classTeacherAssignments   ClassTeacherAssignment[]
   classTimetables           ClassTimetable[]
-  reportCards               ReportCard[]               @relation("ReportCardAcademicYear")
+  reportCards               ReportCard[]                @relation("ReportCardAcademicYear")
   secondaryTimetables       SecondaryTimetable[]
   enrollments               StudentClassEnrollment[]
   subjectTeacherAssignments SubjectTeacherAssignment[]
   terms                     Term[]
+  timetableConfiguration    TimetableConfiguration?
+  timetableSlots            TimetableSlot[]
 
   @@map("academic_years")
 }
 
 model Term {
-  id                  String               @id @default(cuid())
-  academicYearId      String
-  termType            TermType
-  startDate           DateTime
-  endDate             DateTime
-  isActive            Boolean              @default(false)
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  assessments         Assessment[]
-  attendanceRecords   AttendanceRecord[]
-  classTimetables     ClassTimetable[]
-  reportCards         ReportCard[]
-  secondaryTimetables SecondaryTimetable[]
-  academicYear        AcademicYear         @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  id                     String                   @id @default(cuid())
+  academicYearId         String
+  termType               TermType
+  startDate              DateTime
+  endDate                DateTime
+  isActive               Boolean                  @default(false)
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  assessments            Assessment[]
+  attendanceRecords      AttendanceRecord[]
+  classTimetables        ClassTimetable[]
+  reportCards            ReportCard[]
+  secondaryTimetables    SecondaryTimetable[]
+  academicYear           AcademicYear             @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  timetableConfigurations TimetableConfiguration[]
 
   @@unique([academicYearId, termType])
   @@map("terms")
@@ -70,6 +74,7 @@ model Class {
   name                      String
   gradeId                   String
   capacity                  Int                        @default(40)
+  currentEnrolled           Int?
   status                    ClassStatus                @default(ACTIVE)
   createdAt                 DateTime                   @default(now())
   updatedAt                 DateTime                   @updatedAt
@@ -83,6 +88,8 @@ model Class {
   secondaryTimetables       SecondaryTimetable[]
   enrollments               StudentClassEnrollment[]
   subjectTeacherAssignments SubjectTeacherAssignment[]
+  classSubjects             ClassSubject[]
+  timetableSlots            TimetableSlot[]
 
   @@unique([gradeId, name])
   @@index([gradeId, status])
@@ -107,6 +114,8 @@ model Subject {
   subjectTeacherAssignments SubjectTeacherAssignment[]
   department                Department?                @relation(fields: [departmentId], references: [id])
   teacherSubjects           TeacherSubject[]
+  classSubjects             ClassSubject[]
+  timetableSlots            TimetableSlot[]
 
   @@index([departmentId])
   @@map("subjects")
@@ -159,12 +168,16 @@ model Student {
   updatedAt         DateTime                  @updatedAt
   deletedAt         DateTime?
   vulnerability     VulnerabilityStatus       @default(NOT_VULNERABLE)
+  orphanType        OrphanType?
+  deceasedParent    DeceasedParent?
+  statusChangeReason String?
   attendanceRecords AttendanceRecord[]
   reportCards       ReportCard[]
   assessmentResults StudentAssessmentResult[]
   enrollments       StudentClassEnrollment[]
   studentGuardians  StudentGuardian[]
   promotions        StudentPromotion[]
+  smsLogs           SMSLog[]
 
   @@index([status])
   @@index([studentNumber])
@@ -185,6 +198,7 @@ model Guardian {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   studentGuardians StudentGuardian[]
+  smsLogs          SMSLog[]
 
   @@index([phone])
   @@index([email])
@@ -262,6 +276,8 @@ model User {
   updatedAt          DateTime         @updatedAt
   profile            TeacherProfile?
   userPermissions    UserPermission[] @relation("UserPermissions")
+  sentNotifications  Notification[]   @relation("SentNotifications")
+  receivedNotifications Notification[] @relation("ReceivedNotifications")
 
   @@index([email])
   @@index([role])
@@ -298,6 +314,8 @@ model TeacherProfile {
   departments               TeacherDepartment[]
   permissionGrants          UserPermission[]           @relation("PermissionGrants")
   departmentAsHOD           Department?                @relation("DepartmentHOD")
+  timetableSlots            TimetableSlot[]
+  timetableConfigurations   TimetableConfiguration[]
 
   @@index([staffNumber])
   @@index([status])
@@ -353,14 +371,87 @@ model ClassTeacherAssignment {
 }
 
 model SubjectTeacherAssignment {
+  id              String          @id @default(cuid())
+  teacherId       String
+  subjectId       String
+  classId         String
+  academicYearId  String
+  classSubjectId  String?
+  startedAt       DateTime        @default(now())
+  endedAt         DateTime?
+  endReason       String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  academicYear    AcademicYear    @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  class           Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject         Subject         @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacher         TeacherProfile  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  classSubject    ClassSubject?   @relation(fields: [classSubjectId], references: [id])
+
+  @@unique([teacherId, subjectId, classId, academicYearId])
+  @@index([teacherId, academicYearId])
+  @@index([classId, academicYearId])
+  @@index([subjectId, academicYearId])
+  @@index([classSubjectId])
+  @@map("subject_teacher_assignments")
+}
+
+model ClassSubject {
+  id                        String                     @id @default(cuid())
+  classId                   String
+  subjectId                 String
+  periodsPerWeek            Int
+  isCore                    Boolean                    @default(true)
+  createdAt                 DateTime                   @default(now())
+  updatedAt                 DateTime                   @updatedAt
+  class                     Class                      @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject                   Subject                    @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  subjectTeacherAssignments SubjectTeacherAssignment[]
+
+  @@unique([classId, subjectId])
+  @@index([classId])
+  @@index([subjectId])
+  @@map("class_subjects")
+}
+
+model TimetableConfiguration {
+  id                       String          @id @default(cuid())
+  academicYearId           String          @unique
+  termId                   String?
+  schoolStartTime          String
+  periodDuration           Int
+  breakStartPeriod         Int
+  breakDuration            Int
+  periodsBeforeBreak       Int
+  periodsAfterBreak        Int
+  totalPeriods             Int
+  allowSubjectPreferences  Boolean         @default(false)
+  allowTeacherPreferences  Boolean         @default(false)
+  autoAssignRooms          Boolean         @default(true)
+  doublePeriodConfigs      Json?
+  lastGeneratedAt          DateTime?
+  generatedById            String?
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+  academicYear             AcademicYear    @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  term                     Term?           @relation(fields: [termId], references: [id])
+  generatedBy              TeacherProfile? @relation(fields: [generatedById], references: [id])
+
+  @@index([academicYearId])
+  @@map("timetable_configurations")
+}
+
+model TimetableSlot {
   id             String         @id @default(cuid())
-  teacherId      String
-  subjectId      String
   classId        String
+  subjectId      String
+  teacherId      String
   academicYearId String
-  startedAt      DateTime       @default(now())
-  endedAt        DateTime?
-  endReason      String?
+  dayOfWeek      DayOfWeek
+  periodNumber   Int
+  startTime      String
+  endTime        String
+  roomNumber     String?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   academicYear   AcademicYear   @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
@@ -368,11 +459,11 @@ model SubjectTeacherAssignment {
   subject        Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   teacher        TeacherProfile @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 
-  @@unique([teacherId, subjectId, classId, academicYearId])
-  @@index([teacherId, academicYearId])
+  @@unique([classId, academicYearId, dayOfWeek, periodNumber])
   @@index([classId, academicYearId])
-  @@index([subjectId, academicYearId])
-  @@map("subject_teacher_assignments")
+  @@index([teacherId, academicYearId])
+  @@index([academicYearId])
+  @@map("timetable_slots")
 }
 
 model TimeSlot {
@@ -484,6 +575,7 @@ model StudentAssessmentResult {
   id            String     @id @default(cuid())
   studentId     String
   assessmentId  String
+  subjectId     String?
   marksObtained Float
   grade         ECZGrade?
   remarks       String?
@@ -603,6 +695,18 @@ model UserPermission {
   @@map("user_permissions")
 }
 
+model SystemSettings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  category  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@map("system_settings")
+}
+
 model EczGradingScheme {
   id           String     @id @default(cuid())
   academicYear Int
@@ -692,6 +796,16 @@ enum VulnerabilityStatus {
   VULNERABLE_CHILD
   SPECIAL_NEEDS
   UNDER_FIVE_INITIATIVE
+}
+
+enum OrphanType {
+  SINGLE_ORPHAN
+  DOUBLE_ORPHAN
+}
+
+enum DeceasedParent {
+  FATHER
+  MOTHER
 }
 
 enum EnrollmentStatus {
@@ -801,4 +915,109 @@ enum Permission {
   APPROVE_PROMOTION
   MARK_ATTENDANCE
   VIEW_ATTENDANCE
+  SEND_SMS
+  VIEW_SMS_LOGS
+}
+
+model SMSLog {
+  id          String      @id @default(cuid())
+  guardianId  String
+  studentId   String?
+  phoneNumber String
+  message     String      @db.Text
+  status      SMSStatus   @default(PENDING)
+  provider    SMSProvider @default(AFRICAS_TALKING)
+  messageId   String?
+  cost        Float?
+  sentAt      DateTime?
+  error       String?     @db.Text
+  sentBy      String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  guardian    Guardian    @relation(fields: [guardianId], references: [id], onDelete: Cascade)
+  student     Student?    @relation(fields: [studentId], references: [id], onDelete: SetNull)
+
+  @@index([guardianId])
+  @@index([studentId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([sentBy])
+  @@map("sms_logs")
+}
+
+model SMSTemplate {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  template    String   @db.Text
+  variables   String[] @default([])
+  isActive    Boolean  @default(true)
+  category    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+  @@map("sms_templates")
+}
+
+// ==================== INTERNAL NOTIFICATIONS ====================
+model Notification {
+  id               String             @id @default(cuid())
+  senderId         String
+  recipientId      String
+  subject          String
+  message          String             @db.Text
+  type             NotificationType   @default(GENERAL)
+  priority         NotificationPriority @default(NORMAL)
+  status           NotificationStatus @default(UNREAD)
+  relatedEntityType String?           // e.g., "assessment", "class", "student"
+  relatedEntityId  String?            // ID of the related entity
+  readAt           DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  // Relations
+  sender           User               @relation("SentNotifications", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient        User               @relation("ReceivedNotifications", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId, status])
+  @@index([senderId])
+  @@index([createdAt])
+  @@index([type])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  GENERAL
+  ASSESSMENT_REMINDER
+  DEADLINE_EXTENSION
+  APPROVAL_REQUEST
+  SYSTEM_ANNOUNCEMENT
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
+
+enum SMSStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+}
+
+enum SMSProvider {
+  AFRICAS_TALKING
+  TWILIO
+  CLICKSEND
 }

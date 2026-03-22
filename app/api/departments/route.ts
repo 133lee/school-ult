@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     console.log("[API] GET /api/departments response - HOD data:", result.data.map((d: any) => ({
       departmentId: d.id,
       departmentName: d.name,
-      hodId: d.hodId,
+      hodTeacherId: d.hodTeacherId,
       hod: d.hod,
     })));
 

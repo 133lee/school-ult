@@ -46,12 +46,13 @@ interface Subject {
 interface DepartmentWithRelations extends Department {
   subjects?: Subject[];
   teacherProfiles?: Teacher[];
-  hod?: {
+  hodTeacher?: {
     id: string;
-    email: string;
-    profile?: {
-      firstName: string;
-      lastName: string;
+    firstName: string;
+    lastName: string;
+    staffNumber: string;
+    user: {
+      email: string;
     };
   } | null;
 }
@@ -88,8 +89,8 @@ export function DepartmentSheet({
         console.log("[SHEET] fetchDepartment received data - HOD info:", {
           departmentId: data.id,
           departmentName: data.name,
-          hodId: data.hodId,
-          hod: data.hod,
+          hodTeacherId: data.hodTeacherId,
+          hodTeacher: data.hodTeacher,
         });
         setDepartment(data as DepartmentWithRelations);
       } catch (error) {
@@ -283,11 +284,9 @@ export function DepartmentSheet({
                       <p className="text-xs text-muted-foreground mb-1">
                         Head of Department
                       </p>
-                      {department.hod ? (
+                      {department.hodTeacher ? (
                         <p className="text-sm font-medium">
-                          {department.hod.profile
-                            ? `${department.hod.profile.firstName} ${department.hod.profile.lastName}`
-                            : department.hod.email}
+                          {department.hodTeacher.firstName} {department.hodTeacher.lastName}
                         </p>
                       ) : (
                         <p className="text-sm text-muted-foreground">Not assigned</p>
@@ -337,7 +336,7 @@ export function DepartmentSheet({
                     <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 data-[state=open]:rotate-180" />
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <div className="px-4 pb-4">
+                    <div className="px-4 pb-4 max-h-75 overflow-y-auto">
                       {teachers.length > 0 && (
                         <div className="pt-2 space-y-2">
                           {teachers.map((teacher) => (
@@ -412,7 +411,7 @@ export function DepartmentSheet({
                       }`}
                     />
                   </CollapsibleTrigger>
-                  <CollapsibleContent className="mt-2 space-y-2 px-4">
+                  <CollapsibleContent className="mt-2 space-y-2 px-4 max-h-75 overflow-y-auto">
                     {subjects.length === 0 ? (
                       <p className="text-sm text-muted-foreground py-4 text-center">
                         No subjects in this department
